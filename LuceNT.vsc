@@ -1,0 +1,2530 @@
+// LUCENT.VSC - LuceNT 1.0
+// Developed under Visual IRC '97 1.00
+
+Name LuceNT 1.0
+
+// Aliases
+
+Alias J
+  If ([$1] == [])
+     @l $x = $?="Enter a channel name to join:"
+  Else
+     @l $x = $1-
+  EndIf
+  
+  If ([$substr($x 1 1)] != [#]) && ([$substr($x 1 1)] != [&])
+     @l $x = #$x
+  EndIf
+  
+  Join $x
+EndAlias
+
+Alias OP
+  If ([$1] == [])
+     Mode $C +oooo $?="Enter some nicks to op:"
+  Else
+     Mode $C +oooo $1-
+  EndIf
+EndAlias
+
+Alias DEOP
+  If ([$1] == [])
+     Mode $C -oooo $?="Enter some nicks to deop:"
+  Else
+     Mode $C -oooo $1-
+  EndIf
+EndAlias
+
+Alias AWHOIS Ctrl+A
+  If ([$1] == [])
+     @ $Awhois = $?="Active Window Whois on:"
+  Else
+     @ $Awhois = $1
+  EndIf
+  
+  Raw WHOIS $Awhois
+EndAlias
+
+Alias NICKDNS
+  @l $nick = $1
+  @l $host = $GetAddress($nick)
+  
+  If ([$host] == [unknown@unknown])
+     TextOut > $ActiveWindow() clBlue *** NickDNS lookup failure: cannot resolve $nick.
+  EndIf
+  
+  If  ([$ListIndex(0 $host)] != [~])
+     @l $host = $RstrTokR(@ $host)
+  Else
+     @l $temp = $ListRemove(~ $host)
+     @l $host = $RstrTokR(@ $temp)
+     @l $ip = $*DNS($host)
+     TextOut > $ActiveWindow() clBlue *** NickDNS lookup: $nick ($host) resolves to $ip.
+  EndIf
+EndAlias
+
+Alias BANLIST
+  If ([$1] == [])
+     If ([$C] == [.])
+        @ $BanListChan = $?="View the Ban list on Channel:"
+     Else
+        @ $BanListChan = $C
+     EndIf
+  Else
+     @ $BanListChan = $1
+  EndIf
+  
+  Mode $BanListChan +b
+  
+  @ $BanOpen = open
+  @ $BanList = $new(TTabbedForm)
+  @p $BanList.Visible = True
+  @p $BanList.Position = poScreenCenter
+  @p $BanList.Width = 720
+  @p $BanList.Caption = Ban list - $BanListChan
+  @p $BanList.TabCaption = Bans - $BanListChan
+  @p $BanList.OnClose = Destroy $BanList
+  
+  @ $BanField = $new(TRichEdit ownedby $BanList position 2,2,250,25)
+  @p $BanField.Font.Name = Arial
+  @p $BanField.Font.Size = 9
+  @p $BanField.ReadOnly = True
+  TextOut > %$BanField clRed \bBan Mask\b
+  
+  @ $BanField = $new(TRichEdit ownedby $BanList position 254,2,300,25)
+  @p $BanField.Font.Name = Arial
+  @p $BanField.Font.Size = 9
+  @p $BanField.ReadOnly = True
+  TextOut > %$BanField clGreen \bSet By\b
+  
+  @ $BanField = $new(TRichEdit ownedby $BanList position 556,2,70,25)
+  @p $BanField.Font.Name = Arial
+  @p $BanField.Font.Size = 9
+  @p $BanField.ReadOnly = True
+  TextOut > %$BanField clBlue \bTime\b
+  
+  @ $BanField = $new(TRichEdit ownedby $BanList position 628,2,65,25)
+  @p $BanField.Font.Name = Arial
+  @p $BanField.Font.Size = 9
+  @p $BanField.ReadOnly = True
+  @p $BanField.OnClose = Destroy $BanField
+  TextOut > %$BanField clPurple \bDate\b
+  
+  @ $BanNumber = 2
+EndAlias
+
+Alias WHOLIST Ctrl+W
+  If ([$1] == [])
+     @ $WhoMask = $?="Get a Who list on Address:"
+  Else
+     @ $WhoMask = $1
+  EndIf
+  
+  Who $WhoMask
+  
+  @ $WhoOpen = open
+  // @ $WhoList = $mapobject(!WhoList)
+  @ $WhoList = $new(TTabbedForm)
+  @p $WhoList.Visible = True
+  @p $WhoList.Position = screenCenter
+  @p $WhoList.Width = 1009
+  @p $WhoList.Caption = Who list - $WhoMask
+  @p $WhoList.TabCaption = Who - $WhoMask
+  @p $WhoList.OnClose = Destroy $WhoList
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 2,2,80,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clBlue \bNickname\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 84,2,270,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clRed \bAddress\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 356,2,100,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clOlive \bOn channel\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 458,2,53,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clPurple \bAway?\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 513,2,62,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clMaroon \bIRCop?\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 577,2,150,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clGreen \bOn server\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 729,2,50,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clPurple \bHops\b
+  
+  @ $WhoField = $new(TRichEdit ownedby $WhoList position 781,2,200,25)
+  @p $WhoField.Font.Name = Arial
+  @p $WhoField.Font.Size = 9
+  @p $WhoField.ReadOnly = True
+  TextOut > %$WhoField clNavy \bReal name/URL\b
+  
+  @ $WhoNumber = 2
+EndAlias
+
+Alias LOG
+  @l $File = $ListJoin(_ $ListSplit(^ $ActiveWindow().log))
+  @l $File = $ListJoin(_ $ListSplit([ $File))
+  @l $File = $ListJoin(_ $ListSplit(] $File))
+  @l $File = $ListJoin(_ $ListSplit(| $File))
+  @l $File = $ListJoin(_ $ListSplit($ $File))
+  @l $File = $ListJoin(_ $ListSplit(` $File))
+  @l $File = $ListJoin(_ $ListSplit({ $File))
+  @l $File = $ListJoin(_ $ListSplit(} $File))
+  
+  If ([$1-] == [])
+     If ([$ActiveWindow()] == [.])
+        Exec notepad.exe $GetPath(ViRC)Logs\server.log
+     Else
+        Exec notepad.exe $GetPath(ViRC)Logs\$File
+     EndIf
+  Else
+     If ([$1] == [Nick])
+        For (@l $l = 1; $l < $GetLinesInFile($GetPath(ViRC)Logs\$File);$l++)
+          If ($strTokL(> $StrTokR(< $ReadLine($l $GetPath(ViRC)Logs\$File))) == $2)
+             TextOut > LogSearch clBlack {Log-Nick} $ReadLine($l $GetPath(ViRC)Logs\$File)
+          EndIf
+        EndFor
+     Else
+        For (@l $l = 1; $l < $GetLinesInFile($GetPath(ViRC)Logs\$File);$l++)
+          If ($strTokR(> $ReadLine($l $GetPath(ViRC)Logs\$File)) == $1-)
+             TextOut > LogSearch clBlack {Log-Find} $ReadLine($l $GetPath(ViRC)Logs\$File)
+          EndIf
+        EndFor
+     EndIf
+  EndIf
+EndAlias
+
+Alias WALLP
+  TextOut > $C ecNOTICE [\b(WallPeon) $N\b]\t[\bWallPeon\b:\b$C\b] $1-
+  ForEach ($nick1,$nick2,$nick3,$nick4,$nick5,$nick6,$nick7,$nick8,$nick9,$nick10;$PeonList($C))
+  ^Notice $listJoin(, $listRemove($N $nick1 $nick2 $nick3 $nick4 $nick5 $nick6 $nick7 $nick8 $nick9 $nick10)) [\bWallPeon\b:\b$C\b] $1-
+  EndForEach
+EndAlias
+
+Alias WALLOX
+  If !($isOp($1 $C))
+     TextOut > $C ecNOTICE [\b(WallOpExcept) $N\b]\t"$1" isn't an op on $C
+     Halt
+  EndIf
+  TextOut > $C ecNOTICE [\b(WallOpExcept) $N\b]\t[\bWallOpExcept(\k3$1\k)\b:\b$C\b] $2-
+  ForEach ($nick1,$nick2,$nick3,$nick4,$nick5,$nick6,$nick7,$nick8,$nick9,$nick10;$OpList($C))
+  ^Notice $listJoin(, $listRemove($1 $listRemove($N $nick1 $nick2 $nick3 $nick4 $nick5 $nick6 $nick7 $nick8 $nick9 $nick10))) [\bWallOpExcept(\k3$1\k)\b:\b$C\b] $2-
+  EndForEach
+EndAlias
+
+Alias WALLPX
+  If !($isOn($1 $C)) || ($isOp($1 $C))
+     TextOut > $C ecNOTICE [\b(WallPeonExcept) $N\b]\t"$1" is an op on $C or isn't on $C
+     Halt
+  EndIf
+  TextOut > $C ecNOTICE [\b(WallPeonExcept) $N\b]\t[\bWallPeonExcept(\k3$1\k)\b:\b$C\b] $2-
+  ForEach ($nick1,$nick2,$nick3,$nick4,$nick5,$nick6,$nick7,$nick8,$nick9,$nick10;$PeonList($C))
+  ^Notice $listJoin(, $listRemove($1 $listRemove($N $nick1 $nick2 $nick3 $nick4 $nick5 $nick6 $nick7 $nick8 $nick9 $nick10))) [\bWallPeonExcept(\k3$1\k)\b:\b$C\b] $2-
+  EndForEach
+EndAlias
+
+Alias WALLA
+  TextOut > $C ecNOTICE [\b(Wall) $N\b]\t[\bWall\b:\b$C\b] $1-
+  ForEach ($nick1,$nick2,$nick3,$nick4,$nick5,$nick6,$nick7,$nick8,$nick9,$nick10;$NickList($C))
+  ^Notice $listJoin(, $listRemove($N $nick1 $nick2 $nick3 $nick4 $nick5 $nick6 $nick7 $nick8 $nick9 $nick10)) [\bWall\b:\b$C\b] $1-
+  EndForEach
+EndAlias
+
+Alias WALLAX
+  If !($isOn($1 $C))
+     TextOut > $C ecNOTICE [\b(WallExcept) $N\b]\t"$1" isn't on $C
+     Halt
+  EndIf
+  TextOut > $C ecNOTICE [\b(WallExcept) $N\b]\t[\bWallExcept(\k3$1\k)\b:\b$C\b] $2-
+  ForEach ($nick1,$nick2,$nick3,$nick4,$nick5,$nick6,$nick7,$nick8,$nick9,$nick10;$NickList($C))
+  ^Notice $listJoin(, $listRemove($1 $listRemove($N $nick1 $nick2 $nick3 $nick4 $nick5 $nick6 $nick7 $nick8 $nick9 $nick10))) [\bWallExcept(\k3$1\k)\b:\b$C\b] $2-
+  EndForEach
+EndAlias
+
+Alias DECODEPINGINTERVAL
+  @l $msecs = $($mtime() - $1)
+  @l $secs = $($msecs / 1000)
+  @l $frac = $($msecs % 1000)
+  
+  Switch $frac
+  Case is < 10
+  @l $frac = 00$frac
+  Case is < 100
+  @l $frac = 0$frac
+  EndSwitch
+  
+  @l $time = $null
+  
+  If ($secs >= 3600)
+     If ($secs >= 7200)
+        @l $time = $time $($secs / 3600) hours
+     Else
+        @l $time = $time 1 hour
+     EndIf
+     @l $secs = $($secs % 3600)
+  EndIf
+  
+  If ($secs >= 60)
+     If ($secs >= 120)
+        @l $time = $time $($secs / 60) minutes
+     Else
+        @l $time = $time 1 minute
+     EndIf
+     @l $secs = $($secs % 60)
+  EndIf
+  @l $time = $time $secs.$frac seconds
+  
+  @ $fresult = $substr($time 2 99999)
+EndAlias
+
+Alias STARTWEBSERVER
+  @ $webform = $new(TTabbedForm)
+  // (Parsed out) With @p $webform.
+  @p $webform.Left = 20
+  @p $webform.Top = 300
+  @p $webform.Width = 600
+  @p $webform.Height = 120
+  @p $webform.FormStyle = fsStayOnTop
+  @p $webform.Caption = $N's ViRC Web Server
+  @p $webform.TabCaption = ViRC Web Server
+  @p $webform.Visible = True
+  // (Parsed out) EndWith
+  
+  @ $webpanel = $new(TPanel ownedby $webform)
+  // (Parsed out) With @p $webpanel.
+  @p $webpanel.Height = 25
+  @p $webpanel.Align = alTop
+  @p $webpanel.BevelOuter = bvLowered
+  @p $webpanel.Caption = Listening for connections ...
+  @p $webpanel.Visible = True
+  // (Parsed out) EndWith
+  
+  @ $webedit = $new(TRichEdit ownedby $webform)
+  // (Parsed out) With @p $webedit.
+  @p $webedit.Align = alClient
+  @p $webedit.ReadOnly = True
+  @p $webedit.Visible = True
+  // (Parsed out) EndWith
+  
+  @ $websocket = $new(TSockets ownedby $webform)
+  // (Parsed out) With @p $websocket.
+  @p $websocket.Port = 80
+  @p $websocket.OnSessionAvailable = WEBSOCKET_INCOMINGCONNECTION
+  @p $websocket.OnDataAvailable = WEBSOCKET_DATA
+  @p $websocket.OnSessionClosed = WEBSOCKET_CLOSE
+  @p $websocket.OnErrorOccurred = Nop
+  // (Parsed out) EndWith
+  
+  @p $webform.OnClose = STOPWEBSERVER
+  @p $webform.OnResize = $webedit.Repaint
+  
+  $websocket.SListen
+  
+  TextOut > %$webedit clBlue *** Welcome to the \bViRC '97 web server\b.
+EndAlias
+
+Alias WEBSOCKET_INCOMINGCONNECTION
+  $websocket.SAccept
+  @ $remoteip = $prop($websocket.RemoteIPAddr)
+  TextOut > %$webedit clGreen *** Accepting incoming connection from \b$remoteip\b
+  @p $webpanel.Caption = Connected to $remoteip.
+EndAlias
+
+Alias WEBSOCKET_DATA
+  @l $x = $prop($websocket.Text)
+  
+  Parse $x
+  
+  If ([$0] == [GET])
+     ChDir $getPath(ViRC)
+     @ $webfile = $subStr($1 2 9999)
+     
+     If ([$1] == [/])
+        TextOut > %$webedit clBlue *** Processing request: \b$0 $1\b (success)
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <TITLE>$N's ViRC Web Server</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        $websocket.SendCRLF   <H1 ALIGN="CENTER"><FONT FACE="Verdana, Arial"><FONT COLOR="#FF0000">$N</FONT>'s <FONT COLOR="#0000FF">ViRC</FONT> Web Server</FONT></H1>
+        $websocket.SendCRLF   <HR SIZE=3 WIDTH="50%" NOSHADE>
+        $websocket.SendCRLF   <DIV ALIGN="CENTER">
+        
+        $websocket.SendCRLF    <FORM METHOD="GET" ACTION="/chat$webfile">
+        $websocket.SendCRLF     <TABLE BORDER=5 CELLPADDING=5 CELLSPACING=0><TR><TD><FONT FACE="Arial" SIZE=4>Nickname:</FONT> <INPUT TYPE="TEXT" NAME="Nick" SIZE=9 MAXLENGTH=9></TD></TR></TABLE><BR>
+        $websocket.SendCRLF     <TABLE BORDER=5 CELLPADDING=5 CELLSPACING=0>
+        For (@ $y = 0; $y < $channelCount(); $y++)
+          $websocket.SendCRLF      <TR><TD><INPUT TYPE="RADIO" NAME="Channel" VALUE="$listIndex($y $channelList())"> <FONT FACE="Arial" SIZE=4>$listIndex($y $channelList())</FONT></TD></TR>
+        EndFor
+        $websocket.SendCRLF     </TABLE><BR><INPUT TYPE="HIDDEN" NAME="First" VALUE="Yes">
+        $websocket.SendCRLF     <INPUT TYPE="SUBMIT" VALUE="Chat!"> <INPUT TYPE="RESET" VALUE="Clear Form">
+        $websocket.SendCRLF    </FORM>
+        $websocket.SendCRLF    <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        
+        $websocket.SendCRLF    <FORM METHOD="GET" ACTION="/whois"><INPUT TYPE="TEXT" NAME="Nick" SIZE=9 MAXLENGTH=9> <INPUT TYPE="SUBMIT" VALUE="Whois"></FORM>
+        $websocket.SendCRLF    <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        
+        $websocket.SendCRLF    <FORM METHOD="GET" ACTION="/quotes"><INPUT TYPE="TEXT" NAME="Search" SIZE=15> <INPUT TYPE="SUBMIT" VALUE="Search Quotes"></FORM>
+        $websocket.SendCRLF    <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        
+        $websocket.SendCRLF    <FORM METHOD="GET" ACTION="/mp3search"><INPUT TYPE="TEXT" NAME="Search" SIZE=15> <INPUT TYPE="SUBMIT" VALUE="MP3 Search"></FORM>
+        $websocket.SendCRLF    <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        
+        $websocket.SendCRLF    <FONT FACE="Arial" SIZE=2>Copyright &copy; 1998 Michael Dayah (<A HREF="http://www.benray.com/lucent/">LuceNT</A>)</FONT>
+        $websocket.SendCRLF   </DIV>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+     EndIf
+     
+     If ([$subStr($webfile 1 3)] == [say])
+        TextOut > %$webedit clBlue *** Processing request: \b$0 $1\b (success)
+        If ([$subStr($strTokR(Text= $webfile) 1 5)] == [%2Fme])
+           Say #$strTokL(& $strTokR(%23 $webfile)) * \b$strTokL(& $strTokR(= $webfile))\b($remoteip) $webToText($strTokR(Text=%2Fme+ $webfile))
+        Else
+           Say #$strTokL(& $strTokR(%23 $webfile)) <\b$strTokL(& $strTokR(= $webfile))\b($remoteip)>\t$webToText($strTokR(Text= $webfile))
+        EndIf
+        //start insertion
+        @l $channel = #$strTokL(& $strTokR(%23 $webfile))
+        TextOut > %$webedit clBlue *** Processing request: \b$1 $2\b (success)
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <META HTTP-EQUIV="REFRESH" CONTENT="20">
+        $websocket.SendCRLF   <TITLE>Last 20 Lines of $channel</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        $websocket.SendCRLF   <TABLE BORDER=0>
+        $websocket.SendCRLF    <TR>
+        $websocket.SendCRLF     <TD><FORM METHOD="GET" ACTION="/say"><INPUT TYPE="HIDDEN" NAME="Nick" VALUE="$strTokR(= $strTokL(& $1-))"><INPUT TYPE="HIDDEN" NAME="Channel" VALUE="$channel"><INPUT TYPE="TEXT" NAME="Text" SIZE=50> <INPUT TYPE="SUBMIT" VALUE="Say"></FORM></TD>
+        $websocket.SendCRLF     <TD><FORM METHOD="GET" ACTION="/chat"><INPUT TYPE="HIDDEN" NAME="Nick" VALUE="$strTokR(= $strTokL(& $1-))"><INPUT TYPE="HIDDEN" NAME="Channel" VALUE="$channel"><INPUT TYPE="SUBMIT" VALUE="Refresh"></FORM></TD>
+        $websocket.SendCRLF    </TR>
+        $websocket.SendCRLF   </TABLE><HR>
+        $websocket.SendCRLF   <FONT FACE="Arial">
+        For (@ $w = $($getLinesInFile($getPath(ViRC)Logs\$channel.log) - 19); $w <= $getLinesInFile($getPath(ViRC)Logs\$channel.log); $w++)
+          @l $lineText = $readLine($w $getPath(ViRC)Logs\$channel.log)
+          Switch $subStr($lineText 12 1)
+          Case [:
+          $websocket.SendCRLF    <FONT COLOR="#483D8B">[<B>$strTokR([ $strTokL(] $listIndex(1 $lineText)))</B>] $listJoin(&lt; $listSplit(< $listJoin(&gt; $listSplit(> $listRange(3 $listElementCount($lineText) $lineText)))))</FONT><BR>
+          Case <:
+          $websocket.SendCRLF    &lt;<B>$strTokR(< $strTokL(> $lineText))</B>&gt; $listJoin(&lt; $listSplit(< $listJoin(&gt; $listSplit(> $strTokR(> $lineText)))))<BR>
+          Case $char(32):
+          $websocket.SendCRLF    <FONT COLOR="#0000FF"> * <B>$listIndex(3 $lineText)</B> $listRange(4 $listElementCount($lineText) $lineText)</FONT><BR>
+          Case *:
+          Switch $listIndex(2 $lineText)
+          Case Join::
+          $websocket.SendCRLF    <FONT COLOR="#FF0000">*** Join: <B>$listIndex(3 $lineText)</B> $listIndex(4 $lineText)</FONT><BR>
+          Case Part::
+          $websocket.SendCRLF    <FONT COLOR="#FF0000">*** Part: <B>$listIndex(3 $lineText)</B> $listIndex(4 $lineText)</FONT><BR>
+          Case Quit::
+          $websocket.SendCRLF    <FONT COLOR="#483D8B">*** Quit: <B>$listIndex(3 $lineText)</B> ($strTokR($char(40) $lineText)</FONT><BR>
+          Case Mode::
+          $websocket.SendCRLF    <FONT COLOR="#009900">*** Mode: [<B>$strTokR([ $strTokL(] $strTokR(] $lineText)))</B>] by <B>$strTokR(by $strTokR(] $lineText))</B></FONT><BR>
+          Case Topic::
+          $websocket.SendCRLF    <FONT COLOR="#0000FF">$strTokL(by $strTokR(] $lineText)) by <B>$strTokR(by $lineText)</B></FONT><BR>
+          Case Nick::
+          $websocket.SendCRLF    <FONT COLOR="#A0A0A0">*** Nick: <B>$listIndex(3 $lineText)</B> is now known as <B>$listIndex(8 $lineText)</B></FONT><BR>
+          EndSwitch
+          Case Else
+          $websocket.SendCRLF    Parser for this line has not yet been implemented: <B>$lineText</B><BR>
+          EndSwitch
+        EndFor
+        $websocket.SendCRLF   </FONT>
+        $websocket.SendCRLF   <HR>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+     EndIf
+     
+     //end insertion
+     
+     If ([$subStr($webfile 1 4)] == [chat])
+        If ($strPos(&First=Yes $webfile))
+           Say #$strTokL(& $strTokR(%23 $webfile)) *** Join: \b$strTokR(= $strTokL(& $webfile))\b ($remoteip)
+        EndIf
+        $webSocket_Chat($webfile)
+     EndIf
+     
+     If ([$subStr($webfile 1 5)] == [names])
+        TextOut > %$webedit clBlue *** Processing request: \b$0 $1\b (success)
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <TITLE>$N's Web Chat - Names Pane</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        @l $channel = #$strTokR(%23 $webfile)
+        For (@ $z = 1; $z <= $nickCount($channel); $z++)
+          If ($isOp($nicks($channel $z) $channel))
+             $websocket.SendCRLF  @$nicks($channel $z)<BR>
+          Else
+             $websocket.SendCRLF  $nicks($channel $z)<BR>
+          EndIf
+        EndFor
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+     EndIf
+     
+     If ([$subStr($webfile 1 4)] == [text])
+        @l $channel = #$strTokL(& $strTokR(%23 $webfile))
+        TextOut > %$webedit clBlue *** Processing request: \b$1 $2\b (success)
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <META HTTP-EQUIV="REFRESH" CONTENT="20">
+        $websocket.SendCRLF   <TITLE>Last 20 Lines of $channel</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        $websocket.SendCRLF   <TABLE BORDER=0>
+        $websocket.SendCRLF    <TR>
+        $websocket.SendCRLF     <TD><FORM METHOD="GET" ACTION="/say"><INPUT TYPE="HIDDEN" NAME="Nick" VALUE="$strTokR(= $strTokL(& $1-))"><INPUT TYPE="HIDDEN" NAME="Channel" VALUE="$channel"><INPUT TYPE="TEXT" NAME="Text" SIZE=50> <INPUT TYPE="SUBMIT" VALUE="Say"></FORM></TD>
+        $websocket.SendCRLF     <TD><FORM METHOD="GET" ACTION="/chat"><INPUT TYPE="HIDDEN" NAME="Nick" VALUE="$strTokR(= $strTokL(& $1-))"><INPUT TYPE="HIDDEN" NAME="Channel" VALUE="$channel"><INPUT TYPE="SUBMIT" VALUE="Refresh"></FORM></TD>
+        $websocket.SendCRLF    </TR>
+        $websocket.SendCRLF   </TABLE><HR>
+        $websocket.SendCRLF   <FONT FACE="Arial">
+        For (@ $w = $($getLinesInFile($getPath(ViRC)Logs\$channel.log) - 19); $w <= $getLinesInFile($getPath(ViRC)Logs\$channel.log); $w++)
+          @l $lineText = $readLine($w $getPath(ViRC)Logs\$channel.log)
+          Switch $subStr($lineText 12 1)
+          Case [:
+          $websocket.SendCRLF    <FONT COLOR="#483D8B">[<B>$strTokR([ $strTokL(] $listIndex(1 $lineText)))</B>] $listJoin(&lt; $listSplit(< $listJoin(&gt; $listSplit(> $listRange(3 $listElementCount($lineText) $lineText)))))</FONT><BR>
+          Case <:
+          $websocket.SendCRLF    &lt;<B>$strTokR(< $strTokL(> $lineText))</B>&gt; $listJoin(&lt; $listSplit(< $listJoin(&gt; $listSplit(> $strTokR(> $lineText)))))<BR>
+          Case $char(32):
+          $websocket.SendCRLF    <FONT COLOR="#0000FF"> * <B>$listIndex(3 $lineText)</B> $listRange(4 $listElementCount($lineText) $lineText)</FONT><BR>
+          Case *:
+          Switch $listIndex(2 $lineText)
+          Case Join::
+          $websocket.SendCRLF    <FONT COLOR="#FF0000">*** Join: <B>$listIndex(3 $lineText)</B> $listIndex(4 $lineText)</FONT><BR>
+          Case Part::
+          $websocket.SendCRLF    <FONT COLOR="#FF0000">*** Part: <B>$listIndex(3 $lineText)</B> $listIndex(4 $lineText)</FONT><BR>
+          Case Quit::
+          $websocket.SendCRLF    <FONT COLOR="#483D8B">*** Quit: <B>$listIndex(3 $lineText)</B> ($strTokR($char(40) $lineText)</FONT><BR>
+          Case Mode::
+          $websocket.SendCRLF    <FONT COLOR="#009900">*** Mode: [<B>$strTokR([ $strTokL(] $strTokR(] $lineText)))</B>] by <B>$strTokR(by $strTokR(] $lineText))</B></FONT><BR>
+          Case Topic::
+          $websocket.SendCRLF    <FONT COLOR="#0000FF">$strTokL(by $strTokR(] $lineText)) by <B>$strTokR(by $lineText)</B></FONT><BR>
+          Case Nick::
+          $websocket.SendCRLF    <FONT COLOR="#A0A0A0">*** Nick: <B>$listIndex(3 $lineText)</B> is now known as <B>$listIndex(8 $lineText)</B></FONT><BR>
+          EndSwitch
+          Case Else
+          $websocket.SendCRLF    Parser for this line has not yet been implemented: <B>$lineText</B><BR>
+          EndSwitch
+        EndFor
+        $websocket.SendCRLF   </FONT>
+        $websocket.SendCRLF   <HR>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+     EndIf
+     
+     If ([$subStr($webfile 1 5)] == [whois])
+        TextOut > %$webedit clBlue *** Processing request: \b$0 $1\b (success)
+        @ $webWhois = $strTokR(?Nick= $webfile)
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <TITLE>$N's Web Whois - $webWhois</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        $websocket.SendCRLF   <H1 ALIGN="CENTER"><FONT FACE="Verdana, Arial"><FONT COLOR="#FF0000">$N</FONT>'s <FONT COLOR="#0000FF">Web Whois</FONT></FONT></H1>
+        $websocket.SendCRLF   <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        $websocket.SendCRLF   <TABLE ALIGN="CENTER" CELLPADDING=3 CELLSPACING=0>
+        $websocket.SendCRLF    <TR><TH BGCOLOR="#000000" COLSPAN=2><FONT COLOR="#FFFFFF" FACE="Arial">Whois - $webWhois</FONT></TH></TR>
+        $websocket.Close
+        Awhois $webWhois
+     EndIf
+     
+     If ([$subStr($webfile 1 6)] == [quotes])
+        @l $matches = 0
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <TITLE>$N's Quotes From IRC</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        $websocket.SendCRLF   <H1 ALIGN="CENTER"><FONT FACE="Verdana, Arial"><FONT COLOR="#FF0000">$N</FONT>'s <FONT COLOR="#0000FF">Quote Searcher</FONT></FONT></H1>
+        $websocket.SendCRLF   <HR SIZE=3 WIDTH="50%" NOSHADE>
+        $websocket.SendCRLF   <FONT FACE="Arial">
+        $websocket.SendCRLF    <DIV ALIGN="CENTER"><FORM METHOD="GET" ACTION="/quotes"><INPUT TYPE="TEXT" NAME="Search" SIZE=15> <INPUT TYPE="SUBMIT" VALUE="New Search"></FORM></DIV>
+        $websocket.SendCRLF    <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        $websocket.SendCRLF    <TABLE BORDER=0 CELLPADDING=3 BGCOLOR="#FFFFCC" WIDTH="100%"><TR><TD><FONT SIZE=4 FACE="Arial">Query: &quot;$webToText($strTokR(= $webfile))&quot;</FONT></TD></TR></TABLE><BR>
+        For (@ $y = 1; $y <= $getLinesInFile($getPath(ViRC)Quotes.txt); $y++)
+          @l $text = $readLine($y $getPath(ViRC)Quotes.txt)
+          If ($strPos($lower($webToText($strTokR(= $webfile))) $lower($text)))
+             If ([$listIndex(0 $text)] == [*])
+                $websocket.SendCRLF    * <B><A HREF="/whois?Nick=$listIndex(1 $text)">$listIndex(1 $text)</A></B> $listRange(2 $listElementCount($text) $text)<BR>
+             Else
+                $websocket.SendCRLF    &lt;<B><A HREF="/whois?Nick=$strTokR(< $strTokL(> $listIndex(0 $text)))">$strTokR(< $strTokL(> $listIndex(0 $text)))</A></B>&gt; $listRange(1 $listElementCount($text) $text)<BR>
+             EndIf
+             $matches++
+          EndIf
+        EndFor
+        $websocket.SendCRLF    <BR><TABLE BORDER=0 CELLPADDING=3 BGCOLOR="#FFFFCC" WIDTH="100%"><TR><TD><FONT SIZE=4 FACE="Arial">$upper($subStr($numToText($matches) 1 1))$subStr($numToText($matches) 2 $length($numToText($matches) 1 1)) quotes match your query.</FONT></TD></TR></TABLE>
+        $websocket.SendCRLF   </FONT>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+        TextOut > %$webedit clBlue *** Processing request: \b$0 $1\b (success)
+     EndIf
+     
+     If ([$subStr($webfile 1 9)] == [mp3search])
+        @l $matches = 0
+        $websocket.SendCRLF <HTML>
+        $websocket.SendCRLF  <HEAD>
+        $websocket.SendCRLF   <TITLE>$N's MP3 Search Engine</TITLE>
+        $websocket.SendCRLF  </HEAD>
+        $websocket.SendCRLF  <BODY BGCOLOR="#FFFFFF">
+        $websocket.SendCRLF   <H1 ALIGN="CENTER"><FONT FACE="Verdana, Arial"><FONT COLOR="#FF0000">$N</FONT>'s <FONT COLOR="#0000FF">MP3 Search Engine</FONT></FONT></H1>
+        $websocket.SendCRLF   <HR SIZE=3 WIDTH="50%" NOSHADE>
+        $websocket.SendCRLF   <FONT FACE="Arial">
+        $websocket.SendCRLF    <DIV ALIGN="CENTER"><FORM METHOD="GET" ACTION="/mp3search"><INPUT TYPE="TEXT" NAME="Search" SIZE=15> <INPUT TYPE="SUBMIT" VALUE="New Search"></FORM></DIV>
+        $websocket.SendCRLF    <HR SIZE=3 WIDTH="50%" NOSHADE><BR>
+        $websocket.SendCRLF    <TABLE BORDER=0 CELLPADDING=3 BGCOLOR="#FFFFCC" WIDTH="100%"><TR><TD><FONT SIZE=4 FACE="Arial">Query: &quot;$webToText($strTokR(= $webfile))&quot;</FONT></TD></TR></TABLE><BR>
+        $websocket.SendCRLF    <TABLE BORDER=0 CELLPADDING=3><TR><TH>Filename</TH><TH>Size</TH></TR>
+        For (@ $y = 1; $y <= $getLinesInFile($getPath(ViRC)Script\MP3List.txt); $y++)
+          @l $text = $readLine($y $getPath(ViRC)Script\MP3List.txt)
+          If ($strPos($lower($webToText($strTokR(= $webfile))) $lower($text)))
+             $websocket.SendCRLF     <TR><TD>$text</TD><TD>$($getFileSize(C:\MPEG 3\$text) / 1024)KB</TD></TR>
+             $matches++
+          EndIf
+        EndFor
+        $websocket.SendCRLF    </TABLE><BR>
+        $websocket.SendCRLF    <TABLE BORDER=0 CELLPADDING=3 BGCOLOR="#FFFFCC" WIDTH="100%"><TR><TD><FONT SIZE=4 FACE="Arial">$upper($subStr($numToText($matches) 1 1))$subStr($numToText($matches) 2 $length($numToText($matches) 1 1)) MP3(s) match your query.</FONT></TD></TR></TABLE>
+        $websocket.SendCRLF   </FONT>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+        TextOut > %$webedit clBlue *** Processing request: \b$0 $1\b (success)
+     EndIf
+     
+  EndIf
+  
+  EndParse
+EndAlias
+
+Alias WEBSOCKET_CLOSE
+  @l $remoteip = $prop($websocket.RemoteIPAddr)
+  $websocket.SClose
+  TextOut > %$webedit clRed *** Connection closed: \b$remoteip\b
+  @p $webpanel.Caption = Disconnected from $remoteip, listening. . .
+EndAlias
+
+Alias STOPWEBSERVER
+  $websocket.SCancelListen
+  Destroy $webform
+EndAlias
+
+Alias FRENCHDIGIT
+  @l $frenchDigit = zéro "et un" deux trois quatre cinq six sept huit neuf dix onze douze treize quatorze quinze seize
+  @ $fresult = $listIndex($1 $frenchDigit)
+EndAlias
+
+Alias FRENCHNUMBER
+  @l $frenchNumber = $1
+  
+  If ($frenchNumber <= 16)
+     @ $fresult = $frenchDigit($frenchNumber)
+  Else
+     If ($subStr($frenchNumber 2 1) == 0)
+        Switch $subStr($frenchNumber 1 1)
+        Case 1:
+        @ $fresult = dix
+        Case 2:
+        @ $fresult = vingt
+        Case 3:
+        @ $fresult = trente
+        Case Else
+        @ $fresult = Error
+        EndSwitch
+     Else
+        Switch $subStr($frenchNumber 1 1)
+        Case 1:
+        @ $fresult = dix-$frenchDigit($subStr($frenchNumber 2 1))
+        Case 2:
+        @ $fresult = vingt-$frenchDigit($subStr($frenchNumber 2 1))
+        Case 3:
+        @ $fresult = trente-$frenchDigit($subStr($frenchNumber 2 1))
+        Case Else
+        @ $fresult = Error
+        EndSwitch
+     EndIf
+  EndIf
+EndAlias
+
+Alias FRENCHTIME
+  If ($time(n) > 30)
+     If ($time(h) > 12)
+        @l $frenchTimeHour = $frenchDigit($($time(h) - 11))
+     Else
+        @l $frenchTimeHour = $frenchDigit($($time(h) + 1))
+     EndIf
+  Else
+     If ($time(h) > 12)
+        @l $frenchTimeHour = $frenchDigit($($time(h) - 12))
+     Else
+        @l $frenchTimeHour = $frenchDigit($time(h))
+     EndIf
+  EndIf
+  
+  If ($frenchTimeHour == 1) || ([$frenchTimeHour] == [et un])
+     @l $frenchTimePlural = heure
+     @l $frenchTimeHour = une
+  Else
+     @l $frenchTimePlural = heures
+  EndIf
+  
+  Switch $time(h)
+  Case 0:
+  If ($time(n) == 0)
+     @l $frenchTimeHour = $null
+     @l $frenchTimePlural = $null
+     @l $frenchTimeMinute = $null
+     @l $frenchTimeMeridian = midi
+  Else
+     @l $frenchTimeHour = $frenchDigit(12)
+     @l $frenchTimeMeridian = du matin
+  EndIf
+  Case Range 1..11
+  @l $frenchTimeMeridian = du matin
+  Case 12:
+  If ($time(n) == 0)
+     @l $frenchTimeHour = $null
+     @l $frenchTimePlural = $null
+     @l $frenchTimeMinute = $null
+     @l $frenchTimeMeridian = minuit
+  Else
+     @l $frenchTimeMeridian = de l'après-midi
+  EndIf
+  Case Range 13..19
+  @l $frenchTimeMeridian = de l'après-midi
+  Case Range 19..23
+  @l $frenchTimeMeridian = du soir
+  Case Else
+  @l $frenchTimeMeridian = Error
+  EndSwitch
+  
+  Switch $time(n)
+  Case 0:
+  @l $frenchTimeMinute = $null
+  Case 15:
+  @l $frenchTimeMinute = et quart
+  Case 30:
+  @l $frenchTimeMinute = et demie
+  Case 45:
+  @l $frenchTimeMinute = moins le quart
+  Case Else
+  If ($time(n) > 30)
+     @l $frenchTimeMinute = moins $frenchNumber($(60 - $time(n)))
+  Else
+     @l $frenchTimeMinute = $frenchNumber($time(n))
+  EndIf
+  EndSwitch
+  
+  Say $activeWindow() Il est $frenchTimeHour $frenchTimePlural $frenchTimeMinute $frenchTimeMeridian.
+EndAlias
+
+Alias DECODELONGINTERVAL
+  @l $secs = $1
+  @l $time = $null
+  
+  If ($secs >= 315360000)
+     If ($secs >= 630720000)
+        @l $time = $time $($secs / 315360000) decades
+     Else
+        @l $time = $time 1 decade
+     EndIf
+     @l $secs = $($secs % 315360000)
+  EndIf
+  
+  If ($secs >= 31536000)
+     If ($secs >= 63072000)
+        @l $time = $time $($secs / 31536000) years
+     Else
+        @l $time = $time 1 year
+     EndIf
+     @l $secs = $($secs % 31536000)
+  EndIf
+  
+  If ($secs >= 2592000)
+     If ($secs >= 5184000)
+        @l $time = $time $($secs / 2592000) months
+     Else
+        @l $time = $time 1 month
+     EndIf
+     @l $secs = $($secs % 2592000)
+  EndIf
+  
+  If ($secs >= 86400)
+     If ($secs >= 172800)
+        @l $time = $time $($secs / 86400) days
+     Else
+        @l $time = $time 1 day
+     EndIf
+     @l $secs = $($secs % 68400)
+  EndIf
+  
+  If ($secs >= 3600)
+     If ($secs >= 7200)
+        @l $time = $time $($secs / 3600) hours
+     Else
+        @l $time = $time 1 hour
+     EndIf
+     @l $secs = $($secs % 3600)
+  EndIf
+  
+  If ($secs >= 60)
+     If ($secs >= 120)
+        @l $time = $time $($secs / 60) minutes
+     Else
+        @l $time = $time 1 minute
+     EndIf
+     @l $secs = $($secs % 60)
+  EndIf
+  
+  If ($secs >= 1)
+     If ($secs >= 2)
+        @l $time = $time $secs seconds
+     Else
+        @l $time = $time 1 second
+     EndIf
+  EndIf
+  
+  @ $fresult = $time
+EndAlias
+
+Alias MP3LIST
+  @ $MP3List = $new(TStringList)
+  $MP3List.GetFileList C:\MPEG3~1\*.mp3
+  $MP3List.Sort
+  $MP3List.SaveToFile $getPath(Script)MP3List.txt
+  Destroy $MP3List
+  -@ $MP3List
+  
+  ^Msg $activeWindow() \b\u$N\u's MPEG 3 List (\uC:\MPEG 3\*.mp3\u). . .\b
+  TextOut > $activeWindow() ecMyChanText [\b$N\b]\t\b\uLuceNT\u's MPEG 3 List (\uC:\MPEG 3\*.mp3\u). . .\b
+  For (@l $m = 1; $m <= $getLinesInFile($getPath(Script)MP3List.txt); $m++)
+    @l $MP3List.Size = $($getFileSize(C:\MPEG 3\$readLine($m $getPath(Script)MP3List.txt)) / 1024)
+    @l $MP3List.Comma = $subStr($MP3List.Size 1 $($length($MP3List.Size) - 3)),$subStr($MP3List.Size $($length($MP3List.Size) - 2) 3)
+    @l $MP3List.TotalSize = $($MP3List.Size + $MP3List.TotalSize)
+    If ([$1] == [])
+       ^Msg $activeWindow() \b#$m\b [\b\u$MP3List.Commakb\u\b] $rStrTokL(.mp3 $readLine($m $getPath(Script)MP3List.txt))
+    EndIf
+  EndFor
+  Say $activeWindow() \b$($m - 1)\b Files Total (\b$($MP3List.TotalSize / 1024)MB\b)
+EndAlias
+
+Alias WEBSOCKET_DATA2
+  For (@l $s = 0; $s < $listElementCount($serverList()); $s++)
+    $websocket.SendCRLF   <TABLE BORDER=3 CELLPADDING=5>
+    $websocket.SendCRLF    <TR>
+    $websocket.SendCRLF     <TH>$strTokL(: $listIndex($s $serverList()))</TH>
+    $websocket.SendCRLF    </TR>
+    For (@l $c = 1; $c <= $channelCount(); $c++)
+      $websocket.SendCRLF    <TR>
+      $websocket.SendCRLF     <TD></TD>
+      OnServer $s $websocket.SendCRLF     <TD>$channels($c)</TD>
+      $websocket.SendCRLF    </TR>
+    EndFor
+    $websocket.SendCRLF   </TABLE>
+    $websocket.SendCRLF   <BR>
+  EndFor
+EndAlias
+
+Alias GRAPHPING
+  @l $secs = $2
+  @l $border = \k14,14 \k\k15,15 \k\k0,0 \k\k15,15 \k\k14,14 \k
+  @l $dumb = llllllllllllllllllllllllllllll
+  If ($secs < 15)
+     Switch $subStr($strTokR(. $3) 1 2)
+     Case Is < 25
+     @l $add = $null
+     Case 25..74
+     @l $add = + 1
+     Case Is > 75
+     @l $add = + 2
+     EndSwitch
+     @l $bar = \k9,1$subStr($dumb 1 $($secs * 2 $add))\k\k3,1$subStr($dumb 1 $((15 - $secs) * 2))\k\k5,1llllllllll\k
+  Else
+     Switch $subStr($strTokR(. $3) 1 2)
+     Case Is < 25
+     @l $add = $null
+     Case 25..74
+     @l $add = + 1
+     Case Is > 75
+     @l $add = + 2
+     EndSwitch
+     @l $bar = \k9,1$subStr($dumb 1 30)\k\k4,1$subStr($dumb 1 $(($secs - 15) * 2 $add))\k\k5,1$subStr($dumb 1 $((20 - $secs) * 2 $add))\k
+  EndIf
+  
+  @ $fresult = \b\k1 $time() EDT\k \k15,15 \k\k14,14 \k$bar\k14,14 \k\k15,15 \k\k5 $3 seconds lag for\k\k2 $1\k\b
+EndAlias
+
+Alias ROMAN
+  @l $r_ones = 0 I II III IV V VI VII VIII IX
+  @l $r_tens = 0 X XX XXX XL L LX LXX LXXX XC
+  @l $r_hundreds = 0 C CC CCC CD D DC DCC DCCC CM
+  @l $r_thousands = 0 M MM MMM M\uV\u \uV\u \uV\uM \uV\uMM \uV\uMMM M\uX\u
+  @l $r_tenthousands = 0 \uX\u \uXX\u \uXXX\u \uXL\u \uL\u \uLX\u \uLXX\u \uLXXX\u \uXC\u
+  @l $r_hundredthousands = 0 \uC\u \uCC\u \uCCC\u \uCD\u \uD\u \uDC\u \uDCC\u \uDCCC\u \uCM\u
+  @l $r_millions = 0 \uM\u \uMM\u \uMMM\u
+  
+  @l $ones = $($1 % 10)
+  @l $tens = $(($1 / 10) % 10)
+  @l $hundreds = $(($1 / 100) % 10)
+  @l $thousands = $(($1 / 1000) % 10)
+  @l $tenthousands = $(($1 / 10000) % 10)
+  @l $hundredthousands = $(($1 / 100000) % 10)
+  @l $millions = $(($1 / 1000000) % 10)
+  
+  @l $out = $null
+  
+  If ($millions)
+     @l $out = $listIndex($millions $r_millions)
+  EndIf
+  If ($hundredthousands)
+     @l $out = $out$listIndex($hundredthousands $r_hundredthousands)
+  EndIf
+  If ($tenthousands)
+     @l $out = $out$listIndex($tenthousands $r_tenthousands)
+  EndIf
+  If ($thousands)
+     @l $out = $out$listIndex($thousands $r_thousands)
+  EndIf
+  If ($hundreds)
+     @l $out = $out$listIndex($hundreds $r_hundreds)
+  EndIf
+  If ($tens)
+     @l $out = $out$listIndex($tens $r_tens)
+  EndIf
+  If ($ones)
+     @l $out = $out$listIndex($ones $r_ones)
+  EndIf
+  
+  If ([$out] == [])
+     @ $fresult = Zero
+  Else
+     @ $fresult = $out
+  EndIf
+EndAlias
+
+Alias YOMAMA
+  If ([$1] == [])
+     Say $C $randomRead($getPath(ViRC)yomama.txt)
+  Else
+     If ([$2] == [])
+        Say $C $1: $randomRead($getPath(ViRC)yomama.txt)
+     Else
+        Say $2 $1: $randomRead($getPath(ViRC)yomama.txt)
+     EndIf
+  EndIf
+EndAlias
+
+Alias NUKE
+  If ([$1] == [0])
+     @l $from = $2
+  Else
+     @l $from = $1
+  EndIf
+  
+  For (@ $i = 1; $i <= $channelCount(); $i++)
+    @l $lchan = $channels($i)
+    For (@ $j = 1; $j <= $nickCount($lchan); $j++)
+      @l $lnick = $nicks($lchan $j)
+      If ([$lnick] != [$N])
+         @l $mask = $lnick!$getAddress($lnick)
+         If ($maskMatch($mask *!*@$from))
+            TextOutBitmap > $lchan ecNotice $bitmap(nuke.bmp) *** Nuke: \b$lnick\b on Port $3
+            If ($isOp($N $lchan))
+               BK $lchan $lnick \bPort $3 Attack\b
+            Else
+               Notice $lnick \bPort $3 Attack Detected\b
+            EndIf
+         EndIf
+      EndIf
+    EndFor
+  EndFor
+EndAlias
+
+Alias FILESEARCH
+  If ($length($3) < 3)
+     Say $2 \k4[\bFile\k\k3Search\k\b\k4]:\k Search string must be at least three characters.
+     Halt
+  EndIf
+  
+  If ([$3-] == [the]) || ([$3-] == [and]) || ([$3-] == [but]) || ([$3-] == [you]) || ([$3-] == [are]) || ([$3-] == [not])
+     Say $2 \k4[\bFile\k\k3Search\k\b\k4]:\k Invalid word "$3-"
+     Halt
+  EndIf
+  
+  @l $searchlist = $new(TStringList)
+  
+  @l $filename = $getPath(ViRC)$1
+  @l $find = $lower($3)
+  For (@l $c = 1; $c <= $getLinesInFile($filename); $c++)
+    @l $line = $readLine($c $filename)
+    If ($strPos($find $lower($line)))
+       $searchlist.Add $line
+    EndIf
+  EndFor
+  
+  @l $searchcount = $prop($searchlist.Count)
+  
+  @l $limit = 15
+  
+  If ($searchcount > $limit)
+     While ($prop($searchlist.Count) > $limit)
+       $searchlist.Delete 0
+       Yield
+     EndWhile
+     Say $2 \k4[\bFileSearch(\k\k3\b\b$1\k\k4)\b]:\k Found \b$searchcount\b line(s) out of \b$getLinesInFile($filename)\b matching "\b$3\b" Displaying last $limit
+  Else
+     Say $2 \k4[\bFileSearch(\k\k3\b\b$1\k\k4)\b]:\k Found \b$searchcount\b line(s) out of \b$getLinesInFile($filename)\b matching "\b$3\b"
+  EndIf
+  
+  For (@l $counter = 0; $counter <= $($prop($searchlist.Count) - 1); $counter++)
+    @l $match = $searchlist.GetString($counter)
+    If ([$listIndex(0 $match)] == [*])
+       Say $2 \k4[\bSearch(\k\k3\b\b$3\k\k4)\b]:\k * \b$listIndex(1 $match)\b $listRange(2 $listElementCount($match) $match)
+       Halt
+    EndIf
+    If ($strPos(< $match) == 1)
+       Say $2 \k4[\bSearch(\k\k3\b\b$3\k\k4)\b]:\k <\b$strTokR(< $strTokL(> $listIndex(0 $match)))\b> $listRange(1 $listElementCount($match) $match)
+    Else
+       Say $2 \k4[\bSearch(\k\k3\b\b$3\k\k4)\b]:\k $match
+    EndIf
+  EndFor
+EndAlias
+
+Alias NUMTOTEXT
+  @l $q = illion
+  @l $d = dec$q
+  @l $largeNumber = $null $null thousand m$q b$q tr$q quadr$q quint$q sext$q sept$q oct$q non$q $d un$d duo$d tre$d quattuor$d quin$d sex$d septen$d octo$d novem$d vigint$q
+  @l $number = $1
+  
+  For (@ $s = 1; $s <= $($length($1) + 2 / 3) ; $s++)
+    @l $blockNum = $subStr($number $($length($number) - 2) 3)
+    @l $wordBlock = $blockToText($blockNum)
+    If ([$wordBlock] != [])
+       @l $result = $wordBlock $listIndex($s $largeNumber), $result
+    EndIf
+    @l $number = $subStr($number 1 $($length($number) - 3))
+  EndFor
+  
+  @ $fresult = $rStrTokL(, $result)
+EndAlias
+
+Alias BLOCKTOTEXT
+  @l $oD = zero one two three four five six seven eight nine
+  @l $tD = $null onety twenty thirty forty fifty sixty seventy eighty ninety
+  @l $x = $1
+  
+  If ([$subStr($x 1 3)] == [000])
+     @ $fresult = $null
+     Halt
+  EndIf
+  If ([$subStr($x 1 2)] == [00])
+     @l $x = $subStr($1 3 1)
+  EndIf
+  If ([$subStr($x 1 1)] == [0])
+     @l $x = $strTokR(0 $1)
+  EndIf
+  
+  Switch $length($x)
+  
+  Case 1:
+  @l $fresult = $listIndex($x $oD)
+  
+  Case 2:
+  If ([$subStr($x 2 1)] == [0])
+     @ $fresult = $listIndex($subStr($x 1 1) $tD)
+  Else
+     @ $fresult = $listIndex($subStr($x 1 1) $tD)-$listIndex($subStr($x 2 1) $oD)
+  EndIf
+  
+  Case 3:
+  If ([$subStr($x 2 2)] == [00])
+     @ $fresult = $listIndex($subStr($x 1 1) $oD) hundred
+     Halt
+  EndIf
+  If ([$subStr($x 2 1)] == [0])
+     @ $fresult = $listIndex($subStr($x 1 1) $oD) hundred $listIndex($subStr($x 3 1) $oD)
+  Else
+     If ([$subStr($x 3 1)] == [0])
+        @ $fresult = $listIndex($subStr($x 1 1) $oD) hundred $listIndex($subStr($x 2 1) $tD)
+     Else
+        @ $fresult = $listIndex($subStr($x 1 1) $oD) hundred $listIndex($subStr($x 2 1) $tD)-$listIndex($subStr($x 3 1) $oD)
+     EndIf
+  EndIf
+  
+  EndSwitch
+EndAlias
+
+Alias WEBTOTEXT
+  @l $webFileText = $listSplit(+ $1-)
+  @l $in = $webFileText
+  @l $out = $null
+  @l $pos = $strpos(% $in)
+  While ($pos != 0)
+    @l $out = $out$substr($in 1 $($pos - 1))$char($(0+$$$substr($in $($pos + 1) 2)))
+    @l $in = $substr($in $($pos + 3) $length($in))
+    @l $pos = $strpos(% $in)
+  EndWhile
+  @l $in = $out$in
+  @l $out = $null
+  @l $pos = $strpos(+ $in)
+  While ($pos != 0)
+    @l $out = $out$substr($in 1 $($pos - 1)) $null
+    @l $in = $substr($in $($pos + 1) $length($in))
+    @l $pos = $strpos(+ $in)
+  EndWhile
+  @ $fresult = $out$in
+EndAlias
+
+Alias WEBSOCKET_CHAT
+  $websocket.SendCRLF <FRAMESET COLS="85%,*">
+  $websocket.SendCRLF     <FRAME NAME="Text" SRC="/text?$strTokR(? $1-)" SCROLLING="AUTO" FRAMEBORDER="YES">
+  $websocket.SendCRLF     <FRAME NAME="Names" SRC="/names?Chan=%23$strTokL(& $strTokR(%23 $1-))" SCROLLING="AUTO" FRAMEBORDER="YES">
+  $websocket.SendCRLF </FRAMESET>
+  $websocket.SClose
+EndAlias
+
+Alias AUTOJOIN F3
+  Join $invite
+EndAlias
+
+Alias BORGSCAN
+  @l $borg = $C
+  @l $count = 0
+  
+  ForEach ($a; $nickList($borg))
+  @l $o = $getAddress($a)
+  For (@ $t = 1; $t <= $getLinesInFile($getPath(ViRC)Borg.txt); $t++)
+    @l $m = $readLine($t $getPath(ViRC)Borg.txt)
+    If ($maskMatch($a!$o $listIndex(2 $m)))
+       TextOut > BorgScan clBlack Borg Detected: $numToText($listIndex(0 $m)) of $numToText($getLinesInFile($getPath(ViRC)Borg.txt)) ($listIndex(1 $m))
+       $count++
+    EndIf
+  EndFor
+  EndForEach
+  
+  TextOut > BorgScan clBlack Total Borg on $borg: $numToText($count)
+EndAlias
+
+Alias HTMLQUOTES
+  @l $file = "C:\Web Pages\Quotes\index.html"
+  CreateFile $file
+  AppendText $file <HTML>
+  AppendText $file  <HEAD>
+  AppendText $file   <TITLE>$N's Quotes From IRC</TITLE>
+  AppendText $file  </HEAD>
+  AppendText $file  <BODY BGCOLOR="#FFFFFF">
+  AppendText $file   <H1 ALIGN="CENTER"><FONT FACE="Verdana, Arial"><FONT COLOR="#FF0000">$N</FONT>'s <FONT COLOR="#0000FF">Quotes From IRC</FONT></FONT></H1>
+  AppendText $file   <HR SIZE=3 WIDTH="60%" NOSHADE><BR>
+  AppendText $file   <FONT FACE="Arial">
+  For (@ $x = 1; $x <= $getLinesInFile($getPath(ViRC)Quotes.txt); $x++)
+    @l $text = $readLine($x $getPath(ViRC)Quotes.txt)
+    If ([$listIndex(0 $text)] == [*])
+       AppendText $file    * <B>$listIndex(1 $text)</B> $listRange(2 $listElementCount($text) $text)<BR>
+    Else
+       AppendText $file    &lt;<B>$strTokR(< $strTokL(> $listIndex(0 $text)))</B>&gt; $listRange(1 $listElementCount($text) $text)<BR>
+    EndIf
+  EndFor
+  AppendText $file   </FONT>
+  AppendText $file  </BODY>
+  AppendText $file </HTML>
+EndAlias
+
+Alias SEXTALK
+  @l $sex1 = "Let the games begin!" "Sweet Jesus!" "Not that!" "At last!" "Land o' Goshen!" "Is that all?" "Cheese it the cops!" "I never dreamed it could be!" "If I do you won't respect me!" "Now!" "Open sesame!" "EMR!" "Again!" "Faster!" "Harder!" "Help!" "Fuck me harder!" "Is it in yet?" "You aren't my father!" "Doctor that's not *my* shoulder." "No no, do the goldfish!" "Holy Batmobile Batman!" "He's dead he's dead!" "Take me Robert!" "I'm a Republican!" "Put four fingers in!" "What a lover!" "Talk dirty you pig!" "The ceiling needs painting." "Suck harder!" "The animals will hear!" "Not in public!"
+  @l $sex2 = "bellowed" "yelped" "croaked" "growled" "panted" "moaned" "grunted" "laughed" "warbled" "sighed" "ejaculated" "choked" "stammered" "wheezed" "squealed" "whimpered" "salivated" "tongued" "cried" "screamed" "yelled" "said"
+  @l $sex3 = "the saucy" "the wanton" "the unfortunate" "the lust-crazed" "the nine-year-old" "the bull-dyke" "the bisexual" "the gorgeous" "the sweet" "the nymphomaniacal" "the large-hipped" "the freckled" "the forty-five year old" "the white-haired" "the large-boned" "the saintly" "the blind" "the bearded" "the blue-eyed" "the large tongued" "the friendly" "the piano playing" "the ear licking" "the doe eyed" "the sock sniffing" "the lesbian" "the hairy"
+  @l $sex4 = "baggage" "hussy" "woman" "Duchess" "female impersonator" "nymphomaniac" "virgin" "leather freak" "home-coming queen" "defrocked nun" "bisexual budgie" "cheerleader" "office secretary" "sexual deviate" "DARPA contract monitor" "little matchgirl" "ceremonial penguin" "femme fatale" "bosses' daughter" "construction worker" "sausage abuser" "secretary" "Congressman's page" "grandmother" "penguin" "German shepherd" "stewardess" "waitress" "prostitute" "computer science group" "housewife"
+  @l $sex5 = "as the thrashing" "as the slurping" "as the insatiable" "as the rabid" "as the satanic" "as the corpulent" "as the nose-grooming" "as the tripe-fondling" "as the dribbling" "as the spread-eagled" "as the orally fixated" "as the vile" "as the awesomely endowed" "as the handsome" "as the mush-brained" "as the tremendously hung" "as the three-legged" "as the pile-driving" "as the cross-dressing" "as the gerbil buggering" "as the bung-hole stuffing" "as the sphincter licking" "as the hair-pie chewing" "as the muff-diving" "as the clam shucking" "as the egg-sucking" "as the bicycle seat sniffing"
+  @l $sex6 = "rakehell" "hunchback" "lecherous lickspittle" "archduke" "midget" "hired hand" "great Dane" "stallion" "donkey" "electric eel" "paraplegic pothead" "dirty old man" "faggot butler" "friar" "black-power advocate" "follicle fetishist" "handsome priest" "chicken flicker" "homosexual flamingo" "ex-celibate" "drug sucker" "ex-woman" "construction worker" "hair dresser" "dentist" "judge" "social worker"
+  @l $sex7 = "diddled" "devoured" "fondled" "mouthed" "tongued" "lashed" "tweaked" "violated" "defiled" "irrigated" "penetrated" "ravished" "hammered" "bit" "tongue slashed" "sucked" "fucked" "rubbed" "grudge fucked" "masturbated with" "slurped"
+  @l $sex8 = "alabaster" "pink-tipped" "creamy" "rosebud" "moist" "throbbing" "juicy" "heaving" "straining" "mammoth" "succulent" "quivering" "rosey" "globular" "varicose" "jiggling" "bloody" "tilted" "dribbling" "oozing" "firm" "pendulous" "muscular" "bovine"
+  @l $sex9 = "globes" "melons" "mounds" "buds" "paps" "chubbies" "protuberances" "treasures" "buns" "bung" "vestibule" "armpits" "tits" "knockers" "elbows" "eyes" "hooters" "jugs" "lungs" "headlights" "disk drives" "bumpers" "knees" "fried eggs" "buttocks" "charlies" "ear lobes" "bazooms" "mammaries"
+  @l $sex10 = "plunged" "thrust" "squeezed" "pounded" "drove" "eased" "slid" "hammered" "squished" "crammed" "slammed" "reamed" "rammed" "dipped" "inserted" "plugged" "augured" "pushed" "ripped" "forced" "wrenched"
+  @l $sex11 = "bursting" "jutting" "glistening" "Brobdingnagian" "prodigious" "purple" "searing" "swollen" "rigid" "rampaging" "warty" "steaming" "gorged" "trunklike" "foaming" "spouting" "swinish" "prosthetic" "blue veined" "engorged" "horse like" "throbbing" "humongous" "hole splitting" "serpentine" "curved" "steel encased" "glass encrusted" "knobby" "surgically altered" "metal tipped" "open sored" "rapidly dwindling" "swelling" "miniscule" "boney"
+  @l $sex12 = "intruder" "prong" "stump" "member" "meat loaf" "majesty" "bowsprit" "earthmover" "jackhammer" "ramrod" "cod" "jabber" "gusher" "poker" "engine" "brownie" "joy stick" "plunger" "piston" "tool" "manhood" "lollipop" "kidney prodder" "candlestick" "John Thomas" "arm" "testicles" "balls" "finger" "foot" "tongue" "dick" "one-eyed wonder worm" "canyon yodeler" "middle leg" "neck wrapper" "stick shift" "dong" "Linda Lovelace choker"
+  @l $sex13 = "pulsing" "hungry" "hymeneal" "palpitating" "gaping" "slavering" "welcoming" "glutted" "gobbling" "cobwebby" "ravenous" "slurping" "glistening" "dripping" "scabiferous" "porous" "soft-spoken" "pin" "dusty" "tight" "odiferous" "moist" "loose" "scarred" "weapon-less" "banana stuffed" "tire tracked" "mouse nibbled" "tightly tensed" "oft traveled" "grateful" "festering"
+  @l $sex14 = "swamp." "honeypot." "jam jar." "butterbox." "furburger." "cherry pie." "cush." "slot." "slit." "cockpit." "damp." "furrow." "sanctum sanctorum." "bearded clam." "continental divide." "paradise valley." "red river valley." "slot machine." "quim." "palace." "ass." "rose bud." "throat." "eye socket." "tenderness." "inner ear." "orifice." "appendix scar." "wound." "navel." "mouth." "nose." "cunt."
+  Say $activeWindow() "$listIndex($Rand(32) $sex1)" $listIndex($Rand(22) $sex2) $listIndex($Rand(27) $sex3) $listIndex($Rand(31) $sex4) $listIndex($Rand(27) $sex5) $listIndex($Rand(27) $sex6) $listIndex($Rand(21) $sex7) her $listIndex($Rand(24) $sex8) $listIndex($Rand(29) $sex9) and $listIndex($Rand(21) $sex10) his $listIndex($Rand(36) $sex11) $listIndex($Rand(39) $sex12) into her $listIndex($Rand(32) $sex13) $listIndex($Rand(33) $sex14)
+EndAlias
+
+Alias QUOTESEARCH F2
+  FileSearch $searchString
+EndAlias
+
+Alias AOL
+  Say $activeWindow() $upper($1): $randomRead($getPath(ViRC)AOL.txt)
+EndAlias
+
+Alias ENGLISHTIME
+  @ $fresult = It is $time($numToText(h) $numToText($time(n)) $time(AM/PM)
+EndAlias
+
+Alias WEATHER
+  @l $city = $strTokL(, $1)
+  @l $state = $strTokR(, $1)
+  
+  @l $site = cnn.com
+  @ $path = WEATHER/html/$upper($subStr($city 1 1))$lower($subStr($city 2 $length($city)))$upper($state).html
+  TextOut > Weather clBlue *** Connecting to $site ...
+  Ctcp $N DCC CHAT chat $dns($site) 80
+  @ $getWeather = Enabled
+  TextOut > Weather clBlue *** Waiting for Socket Connection ...
+EndAlias
+
+Alias ANALYZE_WEATHER
+  For (@ $s = 382; $s <= $getLinesInFile($getPath(script)weather.html); $s++)
+    @l $weatherline = $readline($s $getPath(script)weather.html)
+    If (Mon.$weatherline)
+     EndFor
+     
+     TextOut > Weather ecTEXT
+   EndAlias
+   
+   // Events
+   
+   Event <default> "*"
+     // This event is handled internally.
+     
+     // Default server text is displayed
+     // automatically by ViRC '97.
+   EndEvent
+   
+   Event <OnStart> "*"
+     // This event is fired when ViRC '97 starts up.
+     
+     // Exec agtdde
+   EndEvent
+   
+   Event <OnClose> "*"
+     // This event is fired when ViRC '97 closes down.
+   EndEvent
+   
+   Event <OnConnect> "*"
+     // This event is fired on connection to the server.
+     
+     @s $pingNick = $null
+     
+     If ($wildMatch($strTokL(: $listIndex($currentServer() $serverList())) *.kidlink.org))
+        Nick Michael
+     EndIf
+   EndEvent
+   
+   Event <OnDisconnect> "*"
+     // This event is fired on disconnection from the server.
+     
+     If ($ChannelCount() > 0)
+        TextOut ecError *** Disconnected from server \b$server\b.
+     EndIf
+   EndEvent
+   
+   Event <OnNotifyJoin> "*"
+     // TextOut ecNOTICE *** Notify: \b$0\b ($getAddress($0)) is on IRC
+     TextOut ecNOTICE *** Notify: \b$0\b is on IRC
+     
+     // DDE AGTDDE TALK "" $0 is on IRC
+   EndEvent
+   
+   Event <OnNotifyQuit> "*"
+     // TextOut ecNOTICE *** Notify: \b$0\b ($getAddress($0)) has quit IRC
+     TextOut ecNOTICE *** Notify: \b$0\b has quit IRC
+     
+     If ([$0] == [LuceNT])
+        Nick LuceNT
+     EndIf
+     
+     // DDE AGTDDE TALK "" $0 has quit IRC
+   EndEvent
+   
+   Event <OnNewInactiveText> "*"
+     // This event is fired when a line of text is added
+     // to a window that doesn't have the focus.
+   EndEvent
+   
+   Event <OnDCCChatConnect> "*"
+     // Fired when a DCC Chat session connects.
+     // The nick is in $0.
+     
+     If ([$getWeather] == [Enabled])
+        CreateFile "$getPath(script)weather.html"
+        Msg =$0 GET /$path
+        TextOut > Weather clBlue *** Transferring $path ...
+     EndIf
+   EndEvent
+   
+   Event <OnDCCChatDisconnect> "*"
+     // Fired when a DCC Chat session disconnects.
+     // The nick is in $0.
+     
+     If ([$getWeather] == [Enabled])
+        @ $getWeather = Disabled
+        TextOut > Weather clBlue *** Transfer Complete
+     EndIf
+     
+     ANALYZE_WEATHER
+   EndEvent
+   
+   Event <OnDCCChatText> "*"
+     // Fired when new DCC Chat text comes in.
+     // The nick is in $0. The text is in $1-.
+     
+     If ([$getWeather] == [Enabled])
+        AppendText "$getPath(script)weather.html" $1-
+     EndIf
+   EndEvent
+   
+   Event <OnDCCSendConnect> "*"
+     // Fired when a DCC Send session connects.
+     // The nick is in $0. The filename is in $1-.
+   EndEvent
+   
+   Event <OnDCCSendDisconnect> "*"
+     // Fired when a DCC Send session disconnects.
+     // The nick is in $0. The filename is in $1-.
+     // $2 contains 1 if the transfer completed successfully, 0 otherwise.
+     
+   EndEvent
+   
+   Event <OnDCCGetConnect> "*"
+     // Fired when a DCC Get session connects.
+     // The nick is in $0. The filename is in $1-.
+   EndEvent
+   
+   Event <OnDCCGetDisconnect> "*"
+     // Fired when a DCC Get session disconnects.
+     // The nick is in $0. The filename is in $1-.
+     // $2 contains 1 if the transfer completed successfully, 0 otherwise.
+   EndEvent
+   
+   Event <OnNewUserConnect> "*"
+     TextOutBitmap > . ecServText $bitmap(_face.bmp) Welcome to the all-new $char(3)1,9Visual IRC '97$char(3)! If you have any problems with the client, then click on the hyperlink to join the #virc channel. Remember to visit http://www.megalith.co.uk/virc and http://www.virc.com frequently for the latest versions too!!
+   EndEvent
+   
+   Event RawServerNotice "NOTICE *"
+     TextOut > . ecError *** [\bRAW\b] $2-
+   EndEvent
+   
+   Event JOIN "* JOIN"
+     TextOutBitmap > $2 ecJOIN $bitmap(_join.bmp) *** Join: \b$nick\b ($user@$host)
+     
+     If ($getBanlevel($nick!$user@$host) >= 1)
+        Bk $2 $nick You're not welcome here! (Ban Level = $GetBanlevel($nick!$user@$host))
+     EndIf
+   EndEvent
+   
+   Event PART "* PART"
+     If ([$nick] != [$N])
+        TextOutBitmap > $2 ecPART $bitmap(_part.bmp) *** Part: \b$nick\b ($user@$host)
+     EndIf
+     
+     // DDE AGTDDE TALK "" $nick has left $C
+   EndEvent
+   
+   Event QUIT "* QUIT"
+     For (@l $i = 1; $i <= $channelcount(); $i++)
+       If ($ison($nick $channels($i)))
+          TextOutBitmap > $channels($i) ecQUIT $bitmap(_quit.bmp) *** Quit: \b$nick\b ($user@$host) [$2-]
+       EndIf
+     EndFor
+     
+     If ([$nick] == [LuceNT])
+        Nick LuceNT
+     EndIf
+   EndEvent
+   
+   Event TOPIC "* TOPIC"
+     TextOut > $2 ecTOPIC *** Topic: "$StrTrim($3-)" by \b$nick\b
+   EndEvent
+   
+   Event MODE "* MODE"
+     TextOutBitmap > $2 ecMODE $bitmap(_mode.bmp) *** Mode: \b[$3-]\b by \b$nick\b
+   EndEvent
+   
+   Event INVITE "* INVITE"
+     TextOut ecNotice *** \b$nick\b ($user@$host) has invited you to \b$StrTrim($3-)\b, to accept, push \bF3\b
+     @ $invite = $StrTrim($3-)
+     
+     If ([$StrTrim($3-)] == [#adopers])
+        Join $StrTrim($3-)
+     EndIf
+   EndEvent
+   
+   Event WALLOPS "* WALLOPS"
+     TextOut > . ecNotice !\b$nick\b!\t$StrTrim($2-)
+   EndEvent
+   
+   Event ChannelMessage "* PRIVMSG #*"
+     TextOut > $2 ecChanText <\b$nick\b>\t$StrTrim($3-)
+     
+     // DDE AGTDDE TALK "" $nick says $strTrim($3-)
+   EndEvent
+   
+   Event LocalChannelMessage "* PRIVMSG &*"
+     TextOut > $2 ecChanText <\b$nick\b>\t$StrTrim($3-)
+   EndEvent
+   
+   Event CTCP "* PRIVMSG * :\A*"
+     TextOut ecCTCP *** Received CTCP $Upper($StrTrim($3)) from \b$nick\b: $4-
+   EndEvent
+   
+   Event ChannelNotice "* NOTICE #*"
+     TextOut > $2 ecNOTICE -\b$nick\b-\t$StrTrim($3-)
+   EndEvent
+   
+   Event LocalChannelNotice "* NOTICE &*"
+     TextOut > $2 ecNOTICE =\b$nick\b=\t$StrTrim($3-)
+   EndEvent
+   
+   Event PrivateNotice "* NOTICE *"
+     if ($StrPos(. $nick) > 0)
+        TextOut > . ecNOTICE =\b$nick\b=\t$StrTrim($3-)
+     Else
+        TextOut ecNOTICE =\b$nick\b=\t$StrTrim($3-)
+     EndIf
+     
+     // Noattribs DDE AGTDDE TALK "" $nick \chr="whisper"\$strTrim($3-)\rst\
+   EndEvent
+   
+   Event CTCPReply "* NOTICE * :\A*"
+     If ([$4-] == [])
+        TextOut ecCTCP *** CTCP: \b$Upper($StrTrim($3)) Reply\b from \b$nick\b
+     Else
+        TextOut ecCTCP *** CTCP: \b$Upper($StrTrim($3)) Reply\b from \b$nick\b: $4-
+     EndIf
+     
+     If ([$upper($StrTrim($3))] == [VERSION])
+        AppendText "$getPath(VIRC)VersionReply.txt" $4-
+        @s $lastVersion = $4-
+     EndIf
+   EndEvent
+   
+   Event KICK "* KICK *"
+     TextOut > $2 ecKICK *** Kick: \b$nick\b has kicked \b$3\b [$StrTrim($4-)]
+   EndEvent
+   
+   Event NICK "* NICK"
+     For (@l $i = 1; $i <= $channelcount(); $i++)
+       If ($ison($nick $channels($i)))
+          TextOut > $channels($i) ecNICK *** Nick: \b$nick\b is now known as \b$2\b
+       EndIf
+     EndFor
+   EndEvent
+   
+   Event PrivateMessage "* PRIVMSG *"
+     If ($GetSetting(Options QueryEnabled)) || ($IsQuerying($nick))
+        TextOut > $nick ecQueryText <\b$nick\b>\t$StrTrim($3-)
+     Else
+        TextOut ecPRIVMSG *\b$nick\b*\t$StrTrim($3-)
+     EndIf
+     
+     // Noattribs DDE AGTDDE TALK "" $nick \chr="whisper"\$strTrim($3-)\rst\
+   EndEvent
+   
+   Event ChannelAction "* PRIVMSG #* :\AACTION"
+     TextOut > $2 ecACTION  * \b$nick\b $4-
+     
+     // Noattribs DDE AGTDDE TALK "" $nick $4-
+   EndEvent
+   
+   Event LocalChannelAction "* PRIVMSG &* :\AACTION"
+     TextOut > $2 ecACTION  * \b$nick\b $4-
+   EndEvent
+   
+   Event PrivateAction "* PRIVMSG * :\AACTION"
+     If ($GetSetting(Options QueryEnabled)) || ($IsQuerying($nick))
+        TextOut > $nick ecACTION  * \b$nick\b $4-
+     Else
+        TextOut ecACTION  * \b$nick\b $4-
+     EndIf
+     
+     // Noattribs DDE AGTDDE TALK "" $nick \chr="whisper"\$strTrim($4-)\rst\
+   EndEvent
+   
+   Event PingReply "* NOTICE * :\APING"
+     @l $pingTime = $decodePingInterval($4)
+     
+     TextOut ecCTCP *** CTCP: \b$StrTrim($3) Reply\b from \b$nick\b: $pingTime
+     
+     If ([$pingNick] == [$nick])
+        Notice $nick $graphPing($nick $strTokL(. $pingTime) $pingTime)
+        @s $pingNick = $null
+     EndIf
+   EndEvent
+   
+   Event Ping "* PRIVMSG * :\APING"
+     // Don't display anything when a ping
+     // comes in.
+   EndEvent
+   
+   Event 471 "* 471 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+l - channel is full)
+   EndEvent
+   
+   Event 473 "* 473 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+i - invite-only)
+   EndEvent
+   
+   Event 474 "* 474 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+b - you're banned)
+   EndEvent
+   
+   Event 475 "* 475 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+k - channel key is set)
+   EndEvent
+   
+   Event ChannelFull "* 471 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+l - channel is full)
+   EndEvent
+   
+   Event InviteOnly "* 473 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+i - invite-only)
+   EndEvent
+   
+   Event Banned "* 474 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+b - you're banned)
+   EndEvent
+   
+   Event KeySet "* 475 *"
+     TextOut > $3 ecError *** Cannot join channel $3 (+k - channel key is set)
+   EndEvent
+   
+   Event ChannelCTCP "* PRIVMSG #* :\A*"
+     If ([$4-] == [])
+        TextOut > $2 ecCTCP *** Channel CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b
+     Else
+        TextOut > $2 ecCTCP *** Channel CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b: $4-
+     EndIf
+   EndEvent
+   
+   Event PrivateCTCP "* PRIVMSG $N :\A*"
+     if ([$StrTrim($3)] != [DCC])
+        If ([$4-] == [])
+           TextOut ecCTCP *** Private CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b
+           //      Notice $nick Type \b/CTCP $strTrim($3) PING\b instead of \b/CTCP PING $strTrim($3)\b
+        Else
+           TextOut ecCTCP *** Private CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b: $4-
+        EndIf
+     EndIf
+   EndEvent
+   
+   Event PrivatePing "* PRIVMSG $N :\APING *"
+     TextOut ecCTCP *** Private CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b
+   EndEvent
+   
+   Event ChannelPing "* PRIVMSG #* :\APING *"
+     TextOut > $2 ecCTCP *** Channel CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b
+   EndEvent
+   
+   Event AwhoisAway "* 301 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uA\uway message:\k\k1 $StrTrim($4-)\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+   EndEvent
+   
+   Event AwhoisName "* 311 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15+-\k\k1,15\uU\user info\k\k0,15---------------------------------------------------------\k
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uN\uickname:\k\k1 $3\k
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uA\uddress:\k\k1 $4@$5\k
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uR\ueal name/URL:\k\k1 $StrTrim($7-)\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Nickname:</TD><TD>$3</TD></TR>
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Address:</TD><TD>$4@$5</TD></TR>
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Real Name:</TD><TD>$strTrim($7-)</TD></TR>
+     EndIf
+   EndEvent
+   
+   Event AwhoisServer "* 312 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uS\uerver:\k\k1 $4 ($StrTrim($5-))\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Server:</TD><TD>$4</TD></TR>
+     EndIf
+   EndEvent
+   
+   Event AwhoisIRCop "* 313 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uI\uRC operator?:\k\k1 Yes\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">IRC operator?:</TD><TD>Yes</TD></TR>
+     EndIf
+   EndEvent
+   
+   Event WhoListFinished "* 315 *"
+     If ([$WhoOpen] == [open])
+        @p $WhoList.Caption = Who list - $WhoMask - Finished
+        @p $WhoList.OnClose = Destroy $WhoList
+        -@ $Who*
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     @ $WhoOpen = closed
+   EndEvent
+   
+   Event AwhoisIdleTime "* 317 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uI\udle time:\k\k1 $DecodeInterval($4)\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Idle time:</TD><TD>$decodeInterval($4)</TD></TR>
+     EndIf
+   EndEvent
+   
+   Event AwhoisFinished "* 318 *"
+     If ([$Awhois] == [$3])
+        -@ $Awhois
+        TextOut > $ActiveWindow() ecSERVER \k0,15+----------------------------------------------------------------------\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF   </TABLE>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+     EndIf
+   EndEvent
+   
+   Event AwhoisChannels "* 319 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15| \k\k1,15\uC\uhannel(s):\k\k1 $StrTrim($4-)\k
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Channel(s):</TD><TD>$strTrim($4-)</TD></TR>
+     EndIf
+   EndEvent
+   
+   Event WhoListAdd "* 352 *"
+     If ([$WhoOpen] != [open])
+        TextOut > . ecSERVER $3-
+     Else
+        
+        If ($StrPos(G $8))
+           @l $WhoAway = Yes
+        Else
+           @l $WhoAway = No
+        EndIf
+        
+        If ($StrPos(* $8))
+           @l $WhoIRCop = Yes
+        Else
+           @l $WhoIRCop = No
+        EndIf
+        
+        If ($StrPos(@ $8))
+           @l $WhoControl = @
+        Else
+           If ($StrPos(+ $8))
+              @l $WhoControl = +
+           Else
+              @l $WhoControl = $null
+           EndIf
+        EndIf
+        
+        If ([$3] == [*])
+           @l $WhoChannel = <None>
+        Else
+           @l $WhoChannel = $3
+        EndIf
+        
+        @ $WhoNumber = $($WhoNumber + 27)
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 2,$WhoNumber,80,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clBlue $7
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 84,$WhoNumber,270,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clRed $4@$5
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 356,$WhoNumber,100,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clOlive $WhoControl$WhoChannel
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 458,$WhoNumber,53,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clPurple $WhoAway
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 513,$WhoNumber,62,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clMaroon $WhoIRCop
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 577,$WhoNumber,150,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clGreen $6
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 729,$WhoNumber,50,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clPurple $StrTrim($9)
+        
+        @ $WhoField = $new(TRichEdit ownedby $WhoList position 781,$WhoNumber,200,25)
+        @p $WhoField.Font.Name = Arial
+        @p $WhoField.Font.Size = 9
+        @p $WhoField.ReadOnly = True
+        TextOut > %$WhoField clNavy $ListRange(10 $ListElementCount($0-) $0-)
+        
+     EndIf
+   EndEvent
+   
+   Event BanListAdd "* 367 *"
+     If ([$BanOpen] != [open])
+        TextOut > . ecSERVER $3-
+     Else
+        
+        If ([$StrTokR(! $5)] == [])
+           @l $BanAddress = $null
+        Else
+           @l $BanAddress = ($StrTokR(! $5))
+        EndIf
+        
+        @ $BanNumber = $($BanNumber + 27)
+        
+        @ $BanField = $new(TRichEdit ownedby $BanList position 2,$BanNumber,250,25)
+        @p $BanField.Font.Name = Arial
+        @p $BanField.Font.Size = 9
+        @p $BanField.ReadOnly = True
+        TextOut > %$BanField clRed $4
+        
+        @ $BanField = $new(TRichEdit ownedby $BanList position 254,$BanNumber,300,25)
+        @p $BanField.Font.Name = Arial
+        @p $BanField.Font.Size = 9
+        @p $BanField.ReadOnly = True
+        TextOut > %$BanField clGreen $StrTokL(! $5) $BanAddress
+        
+        @ $BanField = $new(TRichEdit ownedby $BanList position 556,$BanNumber,70,25)
+        @p $BanField.Font.Name = Arial
+        @p $BanField.Font.Size = 9
+        @p $BanField.ReadOnly = True
+        TextOut > %$BanField clBlue $unixTime($6 hh:mm ampm)
+        
+        @ $BanField = $new(TRichEdit ownedby $BanList position 628,$BanNumber,65,25)
+        @p $BanField.Font.Name = Arial
+        @p $BanField.Font.Size = 9
+        @p $BanField.ReadOnly = True
+        TextOut > %$BanField clPurple $unixTime($6 mm/dd/yy)
+        
+     EndIf
+   EndEvent
+   
+   Event BanListFinshed "* 368 *"
+     If ([$BanOpen] == [open])
+        @p $BanList.Caption = Ban list - $BanListChan - Finished
+        @p $BanList.OnClose = Destroy $BanList
+        -@ $Ban*
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     @ $BanOpen = closed
+   EndEvent
+   
+   Event AutoPing "* PRIVMSG #* :Ping *"
+     TextOut > $2 ecChanText <\b$nick\b>\t$strTrim($3-)
+     
+     If ([$pingNick] == [$null])
+        @ $pingNick = $nick
+        Ping $nick
+        TextOut ecCTCP  -> {\b$nick\b}\tCTCP Ping
+     Else
+        If ([$pingNick] == [$nick])
+           Notice $nick I am still waiting for a reply from you. Please wait.
+        Else
+           Notice $nick I am currently pinging $pingNick. Please try again shortly.
+        EndIf
+     EndIf
+   EndEvent
+   
+   Event AwhoisNoNick "* 401 *"
+     If ([$Awhois] == [$3])
+        TextOut > $ActiveWindow() ecSERVER \k0,15+-\k\k1,15\uU\user info\k\k0,15--\k\k1,15user not on IRC!!\k\k0,15---------------------------------\k
+        -@ $Awhois
+     Else
+        TextOut > . ecSERVER $3-
+     EndIf
+     
+     If ([$webWhois] == [$3])
+        $websocket.SendCRLF    <TR><TD ALIGN="RIGHT" BGCOLOR="#C0C0C0">Nickname:</TD><TD>No such nick</TD></TR>
+        $websocket.SendCRLF   </TABLE>
+        $websocket.SendCRLF  </BODY>
+        $websocket.SendCRLF </HTML>
+        $websocket.SClose
+        -@ $webWhois
+     EndIf
+   EndEvent
+   
+   Event Stop329 "* 329 *"
+     // Don't display anything when a 329
+     // comes in.
+   EndEvent
+   
+   Event RomanNumeral "* PRIVMSG #* :Roman *"
+     TextOut > $2 ecChanText <\b$nick\b>\t$StrTrim($3-)
+     If ($isNumeric($4))
+        If ($4 >= 0) && ($4 < 4000000)
+           ^Msg $2 $nick: Roman Numeral for \b$($4)\b is \b$roman($($4))\b.
+           TextOut > $2 ecChanText <\b$N\b>\t$nick: Roman Numeral for \b$($4)\b is \b$roman($($4))\b.
+        Else
+           ^Msg $2 $nick: Number is out of range (0-3,999,999).
+           TextOut > $2 ecChanText <\b$N\b>\t$nick: Number is out of range (0-3,999,999).
+        EndIf
+     Else
+        ^Msg $2 $nick: Number is too large or not a number.
+        TextOut > $2 ecChanText <\b$N\b>\t$nick: Number is too large or not a number.
+     EndIf
+   EndEvent
+   
+   Event Stop333 "* 333 *"
+     // Don't display anything when a 333
+     // comes in.
+   EndEvent
+   
+   Event Quote "* PRIVMSG #* :Quote *"
+     TextOut > $2 ecChanText <\b$nick\b>\t$strTrim($3-)
+     TextOut clRED *** $nick requested a QuoteSearch of "$strTrim($4)" on $2  Push \bF2\b to proceed
+     @ $searchString = Quotes.txt $2 $strTrim($4-)
+   EndEvent
+   
+   Event KidsWorld "* 999 *"
+     If (!($ison($N $5)) && ([$4] == [JOINED]))
+        TextOutBitmap > KidsWorld ecJOIN $bitmap(_join.bmp) *** Join: \b$strTrim($3)\b ($getAddress($strTrim($3))) has joined \b$5\b
+        Halt
+     EndIf
+     
+     If ([$3] == [:OPERCHAN])
+        TextOutBitmap > KidsWorld ecQUIT $bitmap(_quit.bmp) *** OperChan activated on \b$6\b
+     EndIf
+   EndEvent
+   
+   Event KWorld "* NOTICE * :*** Notice --"
+     If ([$4] == [HACK(4):]) && ($wildMatch($strTokL(: $listIndex($currentServer() $serverList())) *.kidsworld.org))
+        TextOutBitmap > KidsWorld ecMODE $bitmap(_mode.bmp) *** KWorld: \b$8\b [\b$strTokL([ $listRange(10 $($listElementCount($0-) - 1) $0-))\b] on \b$9\b
+     EndIf
+     
+     If ([$5] == [adding]) && ([$6] == [GLINE]) && ($wildMatch($strTokL(: $listIndex($currentServer() $serverList())) *.kidsworld.org))
+        TextOutBitmap > KidsWorld ecQUIT $bitmap(_quit.bmp) *** G:Line: \b$8\b was G:Lined by $listIndex(12 $0-) until $unixTime($strTokL(: $listIndex(10 $0-))) for "$listRange(13 $($listElementCount($0-) - 1) $0-)"
+     EndIf
+   EndEvent
+   
+   Event NowAnIRCop "* 381 *"
+     TextOut > . ecSERVER You are now an IRC Operator
+     
+     If ($wildMatch($strTokL(: $listIndex($currentServer() $serverList())) *.KidsWorld.Org))
+        Umode +h
+        Msg KWorld OperIn #AdOpers
+     EndIf
+   EndEvent
+   
+   Event numberTest "* PRIVMSG #* :number *"
+     TextOut > $2 ecChanText <\b$nick\b>\t$StrTrim($3-)
+     
+     Say $2 $strTrim($4) is $numToText($strTrim($4))
+   EndEvent
+   
+   Event JoinBorgChannel "* JOIN #"
+     TextOutBitmap > $2 ecJOIN $bitmap(_join.bmp) *** Join: \b$nick\b ($user@$host)
+     
+     If ($getBanlevel($nick!$user@$host) >= 1)
+        Bk $2 $nick You're not welcome here! (Ban Level = $GetBanlevel($nick!$user@$host))
+     EndIf
+     
+     If ($getUserlevel($nick!$user@$host) == 5) && ([$2] == [#javex])
+        Mode $2 +o $nick
+     EndIf
+     
+     For (@ $x = 1; $x <= $getLinesInFile($getPath(ViRC)Borg.txt); $x++)
+       @l $a = $readLine($x $getPath(ViRC)Borg.txt)
+       If ($maskMatch($nick!$user@$host $listIndex(2 $a)))
+          Say $2 Welcome to the Collective, $numToText($listIndex(0 $a)) of $numToText($getLinesInFile($getPath(ViRC)Borg.txt)) ($listIndex(1 $a)).
+       EndIf
+     EndFor
+   EndEvent
+   
+   Event PrivateTrout "* PRIVMSG $N :\ATROUT *"
+     TextOut ecCTCP *** Private CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b
+     ^Rctcp $nick TROUT SMACK! JERK! WANK!
+   EndEvent
+   
+   Event ChannelTrout "* PRIVMSG #* :\ATROUT *"
+     TextOut > $2 ecCTCP *** Channel CTCP: \b$Upper($StrTrim($3))\b from \b$nick\b
+     ^Rctcp $nick TROUT SMACK! JERK! WANK!
+   EndEvent
+   
+   Event MP3List "* PRIVMSG #* :mp3list"
+     TextOut > $2 ecChanText <\b$nick\b>\t$StrTrim($3-)
+     Dcc SEND $nick $getPath(Script)MP3List.txt
+   EndEvent
+   
+   Event LaceyPictures "* PRIVMSG #* :get lacey*.jpg"
+     If ($fileExists("C:\Web Pages\Lacey-Chabert\media\images\$4"))
+        NoAttribs Notice $nick Sending $4 Now.
+        NoAttribs Dcc SEND $nick "C:\Web Pages\Lacey-Chabert\media\images\$4"
+     Else
+        NoAttribs Notice $nick Sorry, I do not have $4.
+     EndIf
+   EndEvent
+   
+   // Menus and popups
+   
+   MenuTree MT_MainMenu
+     M_FILE       <none> 0 0 &File
+     M_NEWCONNECT Ctrl+S 0 1 &New connection ...
+     M_SETUP      <none> 0 1 Client s&etup ...
+     M_FSEP1      <none> 0 1 -
+     M_EXIT       Alt+X  0 1 E&xit
+     M_TOOLS      <none> 0 0 &Tools
+     M_FINGER     Ctrl+F 0 1 UNIX &finger ...
+     M_DNS        Ctrl+L 0 1 &DNS lookup ...
+     M_NICKDNS    <none> 0 1 &NickDNS lookup ...
+     M_TSEP1      <none> 0 1 -
+     M_LINKS      <none> 1 1 &Links
+     M_CHANLIST   <none> 1 1 &Channel list ...
+     M_TSEP2      <none> 0 1 -
+     M_EXPLORE    Ctrl+E 0 1 &Explore ...
+     M_SCRIPTING  <none> 0 0 &Scripting
+     M_EVENTS     <none> 0 1 &Events ...
+     M_ALIASES    <none> 0 1 &Aliases ...
+     M_MENUS      <none> 0 1 &Menus/popups ...
+     M_SCRSEP1    <none> 0 1 -
+     M_LOAD       <none> 0 1 &Load script ...
+     M_SCRSEP2    <none> 0 1 -
+     M_VSPUBWIZ   <none> 0 1 &Publish Script ...
+   EndMenuTree
+   
+   MenuItem M_FILE on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_NEWCONNECT on MT_MainMenu
+     NewServerWindow
+   EndMenuItem
+   
+   MenuItem M_SETUP on MT_MainMenu
+     ShowClientSetup
+   EndMenuItem
+   
+   MenuItem M_FSEP1 on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_EXIT on MT_MainMenu
+     Exit
+   EndMenuItem
+   
+   MenuItem M_TOOLS on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_FINGER on MT_MainMenu
+     Finger
+   EndMenuItem
+   
+   MenuItem M_DNS on MT_MainMenu
+     @l $x = $?="Enter a hostname to DNS lookup:"
+     if ([$x] != [])
+        DNS $x
+     endif
+   EndMenuItem
+   
+   MenuItem M_NICKDNS on MT_MainMenu
+     @l $x = $?="Enter a hostname to NickDNS lookup:"
+     if ([$x] != [])
+        NickDNS $x
+     endif
+   EndMenuItem
+   
+   MenuItem M_TSEP1 on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_LINKS on MT_MainMenu
+     Links
+   EndMenuItem
+   
+   MenuItem M_CHANLIST on MT_MainMenu
+     List
+   EndMenuItem
+   
+   MenuItem M_TSEP2 on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_EXPLORE on MT_MainMenu
+     Explore
+   EndMenuItem
+   
+   MenuItem M_SCRIPTING on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_EVENTS on MT_MainMenu
+     ShowEventEditor
+   EndMenuItem
+   
+   MenuItem M_ALIASES on MT_MainMenu
+     ShowAliasEditor
+   EndMenuItem
+   
+   MenuItem M_MENUS on MT_MainMenu
+     ShowMenuEditor
+   EndMenuItem
+   
+   MenuItem M_SCRSEP1 on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_LOAD on MT_MainMenu
+     @l $x = $opendialog(Load a ViRCScript script file|ViRCScript script (*.vsc)|*.vsc|All files (*.*)|*.*)
+     if ([$x] != [])
+        Load "$x"
+     endif
+   EndMenuItem
+   
+   MenuItem M_SCRSEP2 on MT_MainMenu
+   EndMenuItem
+   
+   MenuItem M_VSPUBWIZ on MT_MainMenu
+     ShowViRCScriptPublishingWizard
+   EndMenuItem
+   
+   MenuTree MT_ServerPopup
+     M_BUFFER      <none> 0 0 &Buffer
+     M_BUFFERSAVE  <none> 0 1 &Save ...
+     M_BUFFERCLEAR <none> 0 1 &Clear
+     M_SSEP1       <none> 0 0 -
+     M_SCONNECT    <none> 2 0 Co&nnect
+     M_SDISCONNECT <none> 1 0 &Disconnect
+     M_SSEP2       <none> 0 0 -
+     M_SIGNOFF     <none> 1 0 &Signoff ...
+   EndMenuTree
+   
+   MenuItem M_BUFFER on MT_ServerPopup
+   EndMenuItem
+   
+   MenuItem M_BUFFERSAVE on MT_ServerPopup
+     @l $x = $savedialog(Append window buffer to a file|All files (*.*)|*.*)
+     @l $y = $mapobject(.:tbServerText)
+     AppendText "$x" $prop($y.Text)
+     UnmapObject $y
+   EndMenuItem
+   
+   MenuItem M_BUFFERCLEAR on MT_ServerPopup
+     @l $x = $mapobject(.:tbServerText)
+     $x.Clear
+     UnmapObject $x
+   EndMenuItem
+   
+   MenuItem M_SSEP1 on MT_ServerPopup
+   EndMenuItem
+   
+   MenuItem M_SCONNECT on MT_ServerPopup
+     Connect
+   EndMenuItem
+   
+   MenuItem M_SDISCONNECT on MT_ServerPopup
+     Disconnect
+   EndMenuItem
+   
+   MenuItem M_SSEP2 on MT_ServerPopup
+   EndMenuItem
+   
+   MenuItem M_SIGNOFF on MT_ServerPopup
+     @ $x = $?="Enter a signoff quote, or just press Enter."
+     
+     if ([$x] != [])
+        Quit $x
+     else
+        Quit \b[=\uV97\u=]\b Leaving
+     endif
+   EndMenuItem
+   
+   MenuTree MT_ChannelTextPopup
+     M_BUFFER      <none> 0 0 &Buffer
+     M_BUFFERSAVE  <none> 0 1 &Save ...
+     M_BUFFERCLEAR <none> 0 1 &Clear
+     M_CSEP1       <none> 0 0 -
+     M_CHANINFO    <none> 0 0 C&hannel control ...
+     M_CSEP2       <none> 0 0 -
+     M_OFFERXDCC   <none> 0 0 &Offer XDCC packs
+     M_WHOLIST     <none> 0 0 &Who list ...
+     M_BANLIST     <none> 0 0 &Ban List ...
+   EndMenuTree
+   
+   MenuItem M_BUFFER on MT_ChannelTextPopup
+   EndMenuItem
+   
+   MenuItem M_BUFFERSAVE on MT_ChannelTextPopup
+     @l $x = $savedialog(Append window buffer to a file|All files (*.*)|*.*)
+     @l $y = $mapobject($C:tbChannelText)
+     AppendText "$x" $prop($y.Text)
+     UnmapObject $y
+   EndMenuItem
+   
+   MenuItem M_BUFFERCLEAR on MT_ChannelTextPopup
+     @l $x = $mapobject($C:tbChannelText)
+     $x.Clear
+     UnmapObject $x
+   EndMenuItem
+   
+   MenuItem M_CSEP1 on MT_ChannelTextPopup
+   EndMenuItem
+   
+   MenuItem M_CHANINFO on MT_ChannelTextPopup
+     ChannelControl
+   EndMenuItem
+   
+   MenuItem M_CSEP2 on MT_ChannelTextPopup
+   EndMenuItem
+   
+   MenuItem M_OFFERXDCC on MT_ChannelTextPopup
+     XDCC
+   EndMenuItem
+   
+   MenuItem M_WHOLIST on MT_ChannelTextPopup
+     WWho
+   EndMenuItem
+   
+   MenuItem M_BANLIST on MT_ChannelTextPopup
+     BanList
+   EndMenuItem
+   
+   MenuTree MT_ChannelNicksPopup
+     M_WHOIS       <none> 0 0 &Whois
+     M_QUERY       <none> 0 0 &Query
+     M_SEP1        <none> 0 0 -
+     M_DCC         <none> 0 0 &DCC
+     M_DCCCHAT     <none> 0 1 &Chat
+     M_DCCSEND     <none> 0 1 &Send ...
+     M_DCCWBOARD   <none> 0 1 &Whiteboard ...
+     M_TDCC        <none> 0 0 &TDCC
+     M_TDCCSEND    <none> 0 1 &Send ...
+     M_TDCCVOICE   <none> 0 1 &Voice ...
+     M_TDCCVIDEO   <none> 0 1 V&ideo ...
+     M_SEP2        <none> 0 0 -
+     M_CTCP        <none> 0 0 C&TCP
+     M_CPING       <none> 0 1 &Ping
+     M_CVERSION    <none> 0 1 &Version
+     M_CTIME       <none> 0 1 &Time
+     M_SEP3        <none> 0 0 -
+     M_CONTROL     <none> 1 0 &Control
+     M_OP          <none> 1 1 &Op
+     M_DEOP        <none> 1 1 &Deop
+     M_VOICE       <none> 0 1 &Voice
+     M_DEVOICE     <none> 0 1 D&evoice
+     M_KICK        <none> 1 1 &Kick
+     M_BAN         <none> 1 1 &Ban
+     M_KICKBAN     <none> 1 1 K&ickban
+     M_SEP4        <none> 0 0 -
+     M_KIDSWORLD   <none> 0 0 &KidsWorld
+     M_KWCONTROL   <none> 2 1 &KWorld
+     M_KWKWCONTROL <none> 0 2 &Control
+     M_KWOP        <none> 2 3 &Op
+     M_KWDEOP      <none> 2 3 &Deop
+     M_KWVOICE     <none> 2 3 &Voice
+     M_KWDEVOICE   <none> 2 3 D&evoice
+     M_KWKICK      <none> 2 3 &Kick
+     M_KWBAN       <none> 2 3 &Ban
+     M_KWKICKBAN   <none> 2 3 K&ickban
+     M_KWKWORLD    <none> 0 2 &KWorld
+     M_KWK         <none> 0 1 &K
+     M_KWREGISTER  <none> 0 2 &Reg Chan
+     M_KWKADDOP    <none> 0 2 &Add Op
+     M_KWKOP       <none> 2 2 &Op
+     M_KWKDEOP     <none> 2 2 &Deop
+     M_KWKKICK     <none> 2 2 &Kick
+     M_KWKBAN      <none> 2 2 &Ban
+     M_KWKKICKBAN  <none> 2 2 K&ickban
+     M_KWSTATS     <none> 0 1 &Stats
+     M_KWHELPER    <none> 0 2 &Helper
+     M_KWGETSTATS  <none> 0 2 Stats by &Host
+     M_KWNICKSTATS <none> 0 2 Stats by &Nick
+     M_KWGLINE     <none> 0 1 &G:Line
+     M_KWU@H       <none> 0 2 *User@*.Host
+     M_HAMSTER     <none> 1 0 &Hamster
+   EndMenuTree
+   
+   MenuItem M_WHOIS on MT_ChannelNicksPopup
+     Whois $nick
+   EndMenuItem
+   
+   MenuItem M_QUERY on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     Query $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_SEP1 on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_DCC on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_DCCCHAT on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     DCC Chat $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_DCCSEND on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     DCC Send $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_DCCWBOARD on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     DCC Whiteboard $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_TDCC on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_TDCCSEND on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     TDCC Send $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_TDCCVOICE on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     TDCC Voice $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_TDCCVIDEO on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     TDCC Video $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_SEP2 on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_CTCP on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_CPING on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     Ping $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_CVERSION on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     CTCP $nick VERSION
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_CTIME on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     CTCP $nick TIME
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_SEP3 on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_CONTROL on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_OP on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4;$1-)
+     Mode $C +oooo $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_DEOP on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4;$1-)
+     Mode $C -oooo $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_VOICE on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4;$1-)
+     Mode $C +vvvv $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_DEVOICE on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4;$1-)
+     Mode $C -vvvv $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KICK on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4,$nick5,$nick6,$nick7,$nick8,$nick9,$nick10;$1-)
+     Kick $C $listJoin(, $listRemove($N $nick1 $nick2 $nick3 $nick4 $nick5 $nick6 $nick7 $nick8 $nick9 $nick10))
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_BAN on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     Ban $C $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KICKBAN on MT_ChannelNicksPopup
+     ForEach ($nick;$1-)
+     Bk $C $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_SEP4 on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KIDSWORLD on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWCONTROL on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWKWCONTROL on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWOP on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4; $1-)
+     Msg KWorld Mode $C +oooo $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWDEOP on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4; $1-)
+     Msg KWorld Mode $C -oooo $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWVOICE on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4; $1-)
+     Msg KWorld Mode $C +vvvv $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWDEVOICE on MT_ChannelNicksPopup
+     ForEach ($nick1,$nick2,$nick3,$nick4; $1-)
+     Msg KWorld Mode $C -vvvv $nick1 $nick2 $nick3 $nick4
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKICK on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     Msg KWorld Kick $C $nick $LuceNT
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWBAN on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     Msg KWorld Ban $C $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKICKBAN on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     Msg KWorld Kickban $C $nick $LuceNT
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKWORLD on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWK on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWREGISTER on MT_ChannelNicksPopup
+     Msg K Register $C $makeBanMask($nick!$getAddress($nick))) $?="Enter Date of Birth:"
+     TextOutBitmap > KidsWorld clTEAL $bitmap(_join.bmp) *** Channel Register: \b$C\b was registered to \b$nick\b
+   EndMenuItem
+   
+   MenuItem M_KWKADDOP on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     Msg K Add $C $nick $strTokR(! $makeBanMask($nick!$getAddress($nick))) 50 1 0 0
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKOP on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg K Op $C $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKDEOP on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg K Deop $C $nick
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKKICK on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg K Kick $C $nick $LuceNT
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKBAN on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg K Ban $C $nick $LuceNT
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWKKICKBAN on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg K Kickban $C $nick $LuceNT
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWSTATS on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWHELPER on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Ctcp StatServ Verify $nick $C
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWGETSTATS on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg StatServ Stats *!$getAddress($nick)
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWNICKSTATS on MT_ChannelNicksPopup
+     ForEach ($nick; $1-)
+     ^Msg StatServ Stats Nick $nick $C
+     EndForEach
+   EndMenuItem
+   
+   MenuItem M_KWGLINE on MT_ChannelNicksPopup
+   EndMenuItem
+   
+   MenuItem M_KWU@H on MT_ChannelNicksPopup
+     ^Msg KWorld GLine $strTokR(! $makeBanMask($nick!$getAddress($nick))) $?="Enter Time in Minutes:" $?="Enter Reason:"
+     unset %gline
+   EndMenuItem
+   
+   MenuItem M_HAMSTER on MT_ChannelNicksPopup
+     ForEach ($nick1;$1-)
+     Kick $C $nick1 Join #DuctTapingHamstersSoWhen$nick1ButtfucksThemTheyDontExplode
+     EndForEach
+   EndMenuItem
+   
+   MenuTree MT_QueryTextPopup
+     M_WHOIS     <none> 0 0 &Whois
+     M_SEP1      <none> 0 0 -
+     M_DCC       <none> 0 0 &DCC
+     M_DCCCHAT   <none> 0 1 &Chat
+     M_DCCSEND   <none> 0 1 &Send ...
+     M_DCCWBOARD <none> 0 1 &Whiteboard ...
+     &TDCC       <none> 0 0 &TDCC
+     M_TDCCSEND  <none> 0 1 &Send ...
+     M_TDCCVOICE <none> 0 1 &Voice ...
+     M_TDCCVIDEO <none> 0 1 V&ideo ...
+     M_SEP2      <none> 0 0 -
+     M_CTCP      <none> 0 0 C&TCP
+     M_CPING     <none> 0 1 &PING
+     M_CVERSION  <none> 0 1 &VERSION
+     M_CTIME     <none> 0 1 &TIME
+   EndMenuTree
+   
+   MenuItem M_WHOIS on MT_QueryTextPopup
+     Whois $nick
+   EndMenuItem
+   
+   MenuItem M_SEP1 on MT_QueryTextPopup
+   EndMenuItem
+   
+   MenuItem M_DCC on MT_QueryTextPopup
+   EndMenuItem
+   
+   MenuItem M_DCCCHAT on MT_QueryTextPopup
+     DCC Chat $nick
+   EndMenuItem
+   
+   MenuItem M_DCCSEND on MT_QueryTextPopup
+     DCC Send $nick
+   EndMenuItem
+   
+   MenuItem M_DCCWBOARD on MT_QueryTextPopup
+     DCC Whiteboard $nick
+   EndMenuItem
+   
+   MenuItem &TDCC on MT_QueryTextPopup
+   EndMenuItem
+   
+   MenuItem M_TDCCSEND on MT_QueryTextPopup
+     TDCC Send $nick
+   EndMenuItem
+   
+   MenuItem M_TDCCVOICE on MT_QueryTextPopup
+     TDCC Voice $nick
+   EndMenuItem
+   
+   MenuItem M_TDCCVIDEO on MT_QueryTextPopup
+     TDCC Video $nick
+   EndMenuItem
+   
+   MenuItem M_SEP2 on MT_QueryTextPopup
+   EndMenuItem
+   
+   MenuItem M_CTCP on MT_QueryTextPopup
+   EndMenuItem
+   
+   MenuItem M_CPING on MT_QueryTextPopup
+     Ping $nick
+   EndMenuItem
+   
+   MenuItem M_CVERSION on MT_QueryTextPopup
+     CTCP $nick VERSION
+   EndMenuItem
+   
+   MenuItem M_CTIME on MT_QueryTextPopup
+     CTCP $nick TIME
+   EndMenuItem
+   
+   UpdateMenus
